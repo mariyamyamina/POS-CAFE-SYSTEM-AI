@@ -32,7 +32,7 @@ const BottomActions = ({
             <span className="text-[11px] font-semibold">New Bill</span>
           </button>
 
-          <button onClick={onPriceAmendment} type="button" className={`${purpleButton} flex-col border-r border-white/15`}>
+          <button type="button" className={`${purpleButton} flex-col border-r border-white/15`}>
             <icons.fileText className="mb-1 h-5 w-5" />
             <span className="text-center text-[10px] font-semibold leading-tight">Price<br />Amendment</span>
           </button>
@@ -47,7 +47,6 @@ const BottomActions = ({
             ].map((q) => (
               <button
                 key={q.value}
-                onClick={() => onQuickAdd && onQuickAdd(q.value)}
                 type="button"
                 className={`${purpleButton} border-r border-t border-white/15 text-sm font-bold`}
               >
@@ -55,7 +54,6 @@ const BottomActions = ({
               </button>
             ))}
             <button
-              onClick={onGiftVoucher}
               type="button"
               className={`${purpleButton} flex-col border-t border-white/15 px-1`}
             >
@@ -66,19 +64,19 @@ const BottomActions = ({
         </div>
 
         <div className="grid overflow-hidden rounded-md md:col-span-2 md:grid-cols-2">
-          <button onClick={onOpenCashBox} type="button" className={`${tealButton} border-r border-b border-white/15`}>
+          <button type="button" className={`${tealButton} border-r border-b border-white/15`}>
             <icons.fileText className="mb-1 h-4 w-4" />
             <span className="text-[9px] font-semibold leading-tight">Open Cash<br />Box</span>
           </button>
-          <button onClick={onGoodsReturn} type="button" className={`${tealButton} border-b border-white/15`}>
+          <button type="button" className={`${tealButton} border-b border-white/15`}>
             <icons.rotateCcw className="mb-1 h-4 w-4" />
             <span className="text-[9px] font-semibold leading-tight">Goods<br />Return</span>
           </button>
-          <button onClick={onCancelItem} type="button" className={`${tealButton} border-r border-white/15`}>
+          <button type="button" className={`${tealButton} border-r border-white/15`}>
             <icons.close className="mb-1 h-4 w-4" />
             <span className="text-[9px] font-semibold leading-tight">Cancel<br />Item</span>
           </button>
-          <button onClick={onAddItem} type="button" className={tealButton}>
+          <button type="button" className={tealButton}>
             <icons.plus className="mb-1 h-4 w-4" />
             <span className="text-[9px] font-semibold leading-tight">Add<br />Item</span>
           </button>
@@ -86,29 +84,29 @@ const BottomActions = ({
 
         <div className="grid overflow-hidden rounded-md md:col-span-5 md:grid-rows-2">
           <div className="grid grid-cols-4">
-            <button onClick={onTerminateTransaction} type="button" className={`${orangeButton} border-r border-white/20`}>
+            <button type="button" className={`${orangeButton} border-r border-white/20`}>
               <icons.close className="h-4 w-4 shrink-0" />
               <span className="text-[9px] font-semibold leading-tight">Terminate<br />Transaction</span>
             </button>
-            <button onClick={onPrint} type="button" className={`${orangeButton} border-r border-white/20`}>
+            <button type="button" className={`${orangeButton} border-r border-white/20`}>
               <icons.printer className="h-4 w-4 shrink-0" />
               <span className="text-[9px] font-semibold">Print</span>
             </button>
-            <button onClick={onReservedTransaction} type="button" className={`${orangeButton} border-r border-white/20`}>
+            <button type="button" className={`${orangeButton} border-r border-white/20`}>
               <icons.itemRequest className="h-4 w-4 shrink-0" />
               <span className="text-[9px] font-semibold leading-tight">Reserved<br />Transaction</span>
             </button>
-            <button onClick={onDeleteAllTransaction} type="button" className={orangeButton}>
+            <button type="button" className={orangeButton}>
               <icons.trash className="h-4 w-4 shrink-0" />
               <span className="text-[9px] font-semibold leading-tight">Delete All<br />Transaction</span>
             </button>
           </div>
           <div className="grid grid-cols-2 border-t border-white/20">
-            <button onClick={onRestore} type="button" className={`${orangeButton} border-r border-white/20`}>
+            <button type="button" className={`${orangeButton} border-r border-white/20`}>
               <icons.rotateCcw className="h-4 w-4 shrink-0" />
               <span className="text-[9px] font-semibold">Restore</span>
             </button>
-            <button onClick={onMainMenu} type="button" className={orangeButton}>
+            <button type="button" className={orangeButton}>
               <icons.home className="h-4 w-4 shrink-0" />
               <span className="text-[9px] font-semibold">Main Menu</span>
             </button>

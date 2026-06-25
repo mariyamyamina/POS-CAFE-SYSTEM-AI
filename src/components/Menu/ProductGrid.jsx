@@ -27,8 +27,8 @@ const ProductGrid = ({
   const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex-1 overflow-y-auto px-3 py-2 scrollbar-thin">
+    <div className="flex h-full flex-col">
+      <div className="flex-1 min-h-0 px-3 py-2">
         {paginatedItems.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center p-6 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F3F5F9] text-[#6E768E]">
@@ -56,7 +56,7 @@ const ProductGrid = ({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex h-8 items-center justify-center gap-2 bg-white">
+        <div className="flex h-8 shrink-0 items-center justify-center gap-2 bg-white">
           {Array.from({ length: totalPages }).map((_, idx) => {
             const pageNum = idx + 1;
             const isActive = currentPage === pageNum;

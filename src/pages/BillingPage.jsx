@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import AppLayout from '../layout/AppLayout';
 import Header from '../components/Header/Header';
 import BillTable from '../components/Cart/BillTable';
-import ItemEntry from '../components/Billing/ItemEntry';
 import Keypad from '../components/Keypad/Keypad';
 import CategoryList from '../components/Menu/CategoryList';
 import ProductGrid from '../components/Menu/ProductGrid';
@@ -274,21 +273,17 @@ const BillingPage = ({ onToggleSidebar }) => {
               onUpdateQuantity={handleUpdateQuantity}
             />
 
-            {/* Item Entry Section */}
-            <ItemEntry
-              itemNumber={itemNumberInput}
-              onItemNumberChange={setItemNumberInput}
-              quantity={quantityInput}
-              onQuantityChange={setQuantityInput}
-              onAdd={handleManualAdd}
-            />
-
             {/* Keypad Section */}
             <Keypad
               tableNumber={tableNumber}
               onTableNumberChange={setTableNumber}
               covers={covers}
               onCoversChange={setCovers}
+              itemNumber={itemNumberInput}
+              onItemNumberChange={setItemNumberInput}
+              quantity={quantityInput}
+              onQuantityChange={setQuantityInput}
+              onAdd={handleManualAdd}
               activeField={activeField}
               onActiveFieldChange={setActiveField}
             />
