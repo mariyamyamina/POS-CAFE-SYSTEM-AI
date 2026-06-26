@@ -2,7 +2,7 @@ import React from 'react';
 import { colors } from '../../constants/colors';
 import { icons } from '../../constants/icons';
 
-const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout }) => {
+const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: icons.dashboard },
     { id: 'billing', label: 'Billing', icon: icons.billing },
@@ -54,6 +54,10 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout }) => {
                       background: isActive
                         ? `linear-gradient(135deg, ${colors.gradientStart} 0%, ${colors.gradientEnd} 100%)`
                         : 'transparent'
+                    }}
+                    onClick={() => {
+                      onNavigate?.(item.id);
+                      onClose();
                     }}
                     type="button"
                   >

@@ -20,6 +20,7 @@ import {
   FiHome,
   FiMenu,
   FiCoffee,
+  FiFilter,
 } from 'react-icons/fi';
 
 import {
@@ -136,6 +137,7 @@ export const icons = {
   home: FiHome,
   menu: FiMenu,
   coffee: FiCoffee,
+  filter: FiFilter,
   
   // Custom Barcode / Scanner
   barcode: MdOutlineQrCodeScanner,

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import AppLayout from '../layout/AppLayout';
 import Header from '../components/Header/Header';
-import BillTable from '../components/Cart/BillTable';
-import Keypad from '../components/Keypad/Keypad';
+import BillTable from '../components/Billing/BillTable';
+import Keypad from '../components/Billing/Keypad';
 import CategoryList from '../components/Menu/CategoryList';
 import ProductGrid from '../components/Menu/ProductGrid';
-import BottomActions from '../components/BottomActions/BottomActions';
+import BottomActions from '../components/Billing/BottomActions';
 
 // Detailed mock menu items matching reference image and food categories
 const MENU_ITEMS = [
@@ -43,7 +43,7 @@ const MENU_ITEMS = [
   { id: 701, name: 'Watermelon Juice', price: 55.00, category: 'Fresh Juice', image: 'https://images.unsplash.com/photo-1589733901241-5e3412566718?w=300&auto=format&fit=crop&q=60' },
 ];
 
-const BillingPage = ({ onToggleSidebar, onLogout }) => {
+const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   // Billing panel states
   const [billItems, setBillItems] = useState([]);
   const [itemNumberInput, setItemNumberInput] = useState('');
@@ -236,7 +236,7 @@ const BillingPage = ({ onToggleSidebar, onLogout }) => {
   };
 
   return (
-    <AppLayout activePage="billing" onLogout={onLogout}>
+    <AppLayout activePage="billing" onLogout={onLogout} onNavigate={onNavigate}>
       {/* Header component */}
       <Header
         title="Current Bill"

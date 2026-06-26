@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
 
-const AppLayout = ({ children, activePage = 'billing', onLogout }) => {
+const AppLayout = ({ children, activePage = 'billing', onLogout, onNavigate }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -19,7 +19,7 @@ const AppLayout = ({ children, activePage = 'billing', onLogout }) => {
         isOpen={isMobileSidebarOpen}
         onClose={closeSidebar}
         onLogout={onLogout}
-        toggleSidebar={toggleSidebar}
+        onNavigate={onNavigate}
       />
 
       <div className="flex h-full flex-1 flex-col overflow-hidden">
