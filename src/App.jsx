@@ -1,63 +1,93 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AuthPage from './pages/AuthPage';
 import BillingPage from './pages/BillingPage';
-import AppLayout from './layout/AppLayout';
-// FilterBar removed as requested
+import InventoryPage from './pages/InventoryPage';
+import ItemRequestPage from './pages/ItemRequestPage';
+import SalesReportPage from './pages/SalesReportPage';
+import CommonAppPage from './pages/CommonAppPage';
 import { isAppPage } from './routes/routes';
 
-const PAGE_TITLES = {
-  dashboard: 'Dashboard',
-  inventory: 'Inventory',
-  itemRequest: 'Item Request',
-  salesReport: 'Sales Report',
-  users: 'Users',
-  settings: 'Settings',
+const PATH_TO_PAGE = {
+  '/dashboard': 'dashboard',
+  '/billing': 'billing',
+  '/inventory': 'inventory',
+  '/item_request': 'itemRequest',
+  '/sales_report': 'salesReport',
+  '/users': 'users',
+  '/settings': 'settings',
 };
 
-const PlaceholderPage = ({ page, onLogout, onNavigate }) => {
-  const title = PAGE_TITLES[page] || page;
+const PAGE_TO_PATH = {
+  dashboard: '/dashboard',
+  billing: '/billing',
+  inventory: '/inventory',
+  itemRequest: '/item_request',
+  salesReport: '/sales_report',
+  users: '/users',
+  settings: '/settings',
+};
 
-  return (
-    <AppLayout activePage={page} onLogout={onLogout} onNavigate={onNavigate}>
-      <div className="flex-1 overflow-hidden p-4">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-[#10112B]">{title}</h1>
-              <p className="text-sm text-[#5F5B9B]">Common navbar and quick filters for {title}</p>
-            </div>
-          </div>
+const getInitialPage = () => {
+  if (typeof window === 'undefined') {
+    return 'login';
+  }
 
-          {/* FilterBar removed */}
-
-          <div className="rounded-md bg-white p-6 shadow-sm">
-            <p className="text-sm text-slate-600">
-              {title} content placeholder. Use this area for page-specific data and controls.
-            </p>
-          </div>
-        </div>
-      </div>
-    </AppLayout>
-  );
+  return PATH_TO_PAGE[window.location.pathname] || 'login';
 };
 
 function App() {
-  const [page, setPage] = useState('login');
+  const [page, setPage] = useState(getInitialPage);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setPage(PATH_TO_PAGE[window.location.pathname] || 'login');
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToPage = (nextPage) => {
+    setPage(nextPage);
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const nextPath = PAGE_TO_PATH[nextPage] || '/';
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath);
+    }
+  };
+
+  const logout = () => navigateToPage('login');
 
   if (page === 'billing') {
-    return <BillingPage onLogout={() => setPage('login')} onNavigate={setPage} />;
+    return <BillingPage onLogout={logout} onNavigate={navigateToPage} />;
+  }
+
+  if (page === 'inventory') {
+    return <InventoryPage onLogout={logout} onNavigate={navigateToPage} />;
+  }
+
+  if (page === 'itemRequest') {
+    return <ItemRequestPage onLogout={logout} onNavigate={navigateToPage} />;
+  }
+
+  if (page === 'salesReport') {
+    return <SalesReportPage onLogout={logout} onNavigate={navigateToPage} />;
   }
 
   if (isAppPage(page)) {
-    return <PlaceholderPage page={page} onLogout={() => setPage('login')} onNavigate={setPage} />;
+    return <CommonAppPage page={page} onLogout={logout} onNavigate={navigateToPage} />;
   }
 
   return (
     <AuthPage
       mode={page}
-      onShowLogin={() => setPage('login')}
+      onShowLogin={() => navigateToPage('login')}
       onShowRegister={() => setPage('register')}
-      onLogin={() => setPage('billing')}
+      onLogin={() => navigateToPage('billing')}
     />
   );
 }
