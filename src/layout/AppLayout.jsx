@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar/Sidebar';
 
-const AppLayout = ({ children, activePage = 'billing' }) => {
+const AppLayout = ({ children, activePage = 'billing', onLogout }) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const toggleSidebar = () => {
@@ -18,6 +18,7 @@ const AppLayout = ({ children, activePage = 'billing' }) => {
         activePage={activePage}
         isOpen={isMobileSidebarOpen}
         onClose={closeSidebar}
+        onLogout={onLogout}
         toggleSidebar={toggleSidebar}
       />
 

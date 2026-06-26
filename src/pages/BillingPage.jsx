@@ -43,7 +43,7 @@ const MENU_ITEMS = [
   { id: 701, name: 'Watermelon Juice', price: 55.00, category: 'Fresh Juice', image: 'https://images.unsplash.com/photo-1589733901241-5e3412566718?w=300&auto=format&fit=crop&q=60' },
 ];
 
-const BillingPage = ({ onToggleSidebar }) => {
+const BillingPage = ({ onToggleSidebar, onLogout }) => {
   // Billing panel states
   const [billItems, setBillItems] = useState([]);
   const [itemNumberInput, setItemNumberInput] = useState('');
@@ -236,7 +236,7 @@ const BillingPage = ({ onToggleSidebar }) => {
   };
 
   return (
-    <AppLayout activePage="billing">
+    <AppLayout activePage="billing" onLogout={onLogout}>
       {/* Header component */}
       <Header
         title="Current Bill"

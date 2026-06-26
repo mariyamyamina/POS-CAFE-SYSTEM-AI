@@ -2,7 +2,7 @@ import React from 'react';
 import { colors } from '../../constants/colors';
 import { icons } from '../../constants/icons';
 
-const Sidebar = ({ activePage = 'billing', isOpen, onClose }) => {
+const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: icons.dashboard },
     { id: 'billing', label: 'Billing', icon: icons.billing },
@@ -69,6 +69,7 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose }) => {
         <div className="border-t border-white/10 p-3">
           <button
             className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-[12px] font-semibold text-white transition-colors hover:bg-white/5"
+            onClick={onLogout}
             type="button"
           >
             <icons.logout className="h-5 w-5" />
