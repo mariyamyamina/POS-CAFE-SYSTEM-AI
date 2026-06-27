@@ -15,7 +15,7 @@ const Header = ({
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}
-          className="flex h-9 w-9 items-center justify-center rounded-md bg-white text-text-600 transition-colors hover:bg-text-100"
+          className="flex h-9 w-9 items-center justify-center rounded-md text-text-600 transition-colors hover:bg-text-100"
           aria-label="Toggle sidebar"
           type="button"
         >

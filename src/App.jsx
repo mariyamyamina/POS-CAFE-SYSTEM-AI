@@ -4,7 +4,9 @@ import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
 import ItemRequestPage from './pages/ItemRequestPage';
 import SalesReportPage from './pages/SalesReportPage';
+import UsersPage from './pages/UsersPage';
 import CommonAppPage from './pages/CommonAppPage';
+import SettingsPage from './pages/SettingsPage'; 
 import { isAppPage } from './routes/routes';
 
 const PATH_TO_PAGE = {
@@ -76,6 +78,14 @@ function App() {
 
   if (page === 'salesReport') {
     return <SalesReportPage onLogout={logout} onNavigate={navigateToPage} />;
+  }
+
+  if (page === 'users') {
+    return <UsersPage onLogout={logout} onNavigate={navigateToPage} />;
+  }
+
+   if (page === 'settings') {                                          // ← add this block
+    return <SettingsPage onLogout={logout} onNavigate={navigateToPage} />;
   }
 
   if (isAppPage(page)) {

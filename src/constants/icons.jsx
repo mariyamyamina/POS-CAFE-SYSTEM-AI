@@ -34,6 +34,7 @@ import {
   FiUploadCloud,
   FiSave,
   FiSend,
+  FiInfo,
 } from 'react-icons/fi';
 
 import {
@@ -53,6 +54,8 @@ import {
   BiChevronRight,
   BiSolidFilePdf,
 } from 'react-icons/bi';
+
+import { RiCupLine } from "react-icons/ri";
 
 // Custom SVG components for the specific food icons to ensure exact visual representation
 const BunIcon = (props) => (
@@ -164,6 +167,7 @@ export const icons = {
   upload: FiUploadCloud,
   save: FiSave,
   send: FiSend,
+  info: FiInfo,
   
   // Custom Barcode / Scanner
   barcode: MdOutlineQrCodeScanner,
@@ -186,4 +190,6 @@ export const icons = {
   // Pagination
   chevronLeft: BiChevronLeft,
   chevronRight: BiChevronRight,
+  logo:RiCupLine,
+  
 };

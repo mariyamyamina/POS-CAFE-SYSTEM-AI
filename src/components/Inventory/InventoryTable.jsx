@@ -12,7 +12,7 @@ const sortHeaders = ['Item Name', 'Category', 'Price', 'Unit', 'Purchased', 'Sol
 const InventoryTable = ({ items, onEditItem }) => {
   return (
     <div className="overflow-hidden rounded-lg border border-[#EAECF3] bg-white shadow-[0_2px_8px_rgba(20,18,56,0.04)]">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto ">
         <table className="min-w-[1120px] w-full border-collapse text-left">
           <thead>
             <tr className="h-9 bg-[#F9FAFC]">
@@ -45,17 +45,17 @@ const InventoryTable = ({ items, onEditItem }) => {
                     </div>
                   </td>
                   <td className="px-5 text-[#6D28D9]">{item.category}</td>
-                  <td className="px-5 text-black">${item.price.toFixed(2)}</td>
+                  <td className="px-5 text-black">₹{item.price.toFixed(2)}</td>
                   <td className="px-5 text-[#6D28D9]">{item.unit}</td>
                   <td className="px-5 text-black">{item.purchased}</td>
                   <td className="px-5 text-black">{item.sold}</td>
                   <td className={`px-5 ${stockTone}`}>{item.inStock}</td>
-                  <td className="px-5">
+                  <td className="px-5 min-w-[130px]">
                     <span className={`inline-flex rounded-md border px-2.5 py-1 text-[11px] font-medium ${statusStyles[item.status]}`}>
                       {item.status}
                     </span>
                   </td>
-                  <td className="px-5 text-[#6D28D9]">{item.lastUpdated}</td>
+                  <td className="px-5 text-[#6D28D9] min-w-[180px]">{item.lastUpdated}</td>
                   <td className="px-5">
                     <button
                       onClick={() => onEditItem?.(item)}

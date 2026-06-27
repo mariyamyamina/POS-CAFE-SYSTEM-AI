@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AppLayout from '../layout/AppLayout';
 import Header from '../components/Header/Header';
 import BillTable from '../components/Billing/BillTable';
@@ -6,6 +6,7 @@ import Keypad from '../components/Billing/Keypad';
 import CategoryList from '../components/Menu/CategoryList';
 import ProductGrid from '../components/Menu/ProductGrid';
 import BottomActions from '../components/Billing/BottomActions';
+import PriceAmendment from '../components/Billing/PriceAmendment';
 
 // Detailed mock menu items matching reference image and food categories
 const MENU_ITEMS = [
@@ -32,7 +33,6 @@ const MENU_ITEMS = [
   { id: 123, name: 'Veg Bun', price: 50, category: 'Bake', image: 'images/veg-bun.png' },
   { id: 124, name: 'Veg Puff', price: 20, category: 'Steamed Bun', image: 'images/veg-puff.png' },
   { id: 125, name: 'egg puff', price: 30, category: 'Steamed Bun', image: 'images/egg-puff.png' },
-
 ];
 
 const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
@@ -40,32 +40,19 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   const [billItems, setBillItems] = useState([]);
   const [itemNumberInput, setItemNumberInput] = useState('');
   const [quantityInput, setQuantityInput] = useState(1);
-  
+
   // Table info and Keypad states
   const [tableNumber, setTableNumber] = useState('');
   const [covers, setCovers] = useState('');
-  const [activeField, setActiveField] = useState('table'); // 'table' or 'covers'
-  
+  const [activeField, setActiveField] = useState('table');
+
   // Menu and Header states
   const [selectedCategory, setSelectedCategory] = useState('All Items');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
-  
-  // Feedback toast message state
-  const [toast, setToast] = useState(null);
 
-  // Auto-dismiss toast
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 2500);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
-  // Show a popup toast
-  const triggerToast = (message, type = 'info') => {
-    setToast({ message, type });
-  };
+  // Price Amendment panel toggle
+  const [showPriceAmendment, setShowPriceAmendment] = useState(false);
 
   // Calculate bill total amount
   const totalAmount = billItems.reduce(
@@ -80,7 +67,6 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
       const updated = [...billItems];
       updated[existingIndex].quantity += qty;
       setBillItems(updated);
-      triggerToast(`Increased quantity of ${item.name}`);
     } else {
       setBillItems([
         ...billItems,
@@ -89,38 +75,27 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
           name: item.name,
           quantity: qty,
           unitPrice: item.price,
+          image: item.image,
         },
       ]);
-      triggerToast(`Added ${item.name} to bill`);
     }
   };
 
   // Handle addition via manual Item Number input
   const handleManualAdd = () => {
-    if (!itemNumberInput.trim()) {
-      triggerToast("Please scan or enter an item number", "error");
-      return;
-    }
-
+    if (!itemNumberInput.trim()) return;
     const itemCode = parseInt(itemNumberInput.trim(), 10);
     const matched = MENU_ITEMS.find((item) => item.id === itemCode);
-
     if (matched) {
       handleAddItemToBill(matched, quantityInput);
       setItemNumberInput('');
       setQuantityInput(1);
-    } else {
-      triggerToast(`Item code #${itemNumberInput} not found in menu`, "error");
     }
   };
 
   // Handle removing an item
   const handleRemoveItem = (id) => {
-    const matched = billItems.find((item) => item.id === id);
     setBillItems(billItems.filter((item) => item.id !== id));
-    if (matched) {
-      triggerToast(`Removed ${matched.name} from bill`, "warning");
-    }
   };
 
   // Handle changing quantity in the list directly
@@ -130,7 +105,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
       return;
     }
     setBillItems(
-      billItems.map((item) => 
+      billItems.map((item) =>
         item.id === id ? { ...item, quantity: newQty } : item
       )
     );
@@ -143,15 +118,14 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
     setCovers('');
     setItemNumberInput('');
     setQuantityInput(1);
-    triggerToast("Cleared and started a New Bill", "success");
+    setShowPriceAmendment(false);
   };
 
   const handlePriceAmendment = () => {
-    triggerToast("Mock Action: Price Amendment activated");
+    setShowPriceAmendment(true);
   };
 
   const handleQuickAdd = (amount) => {
-    // Quick adds a dummy cash item or adjusts amount
     setBillItems([
       ...billItems,
       {
@@ -161,71 +135,37 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
         unitPrice: amount,
       }
     ]);
-    triggerToast(`Added Quick Charge ₹${amount} to bill`);
   };
 
-  const handleGiftVoucher = () => {
-    triggerToast("Mock Action: Applied Gift Voucher");
-  };
-
-  const handleOpenCashBox = () => {
-    triggerToast("Mock Action: Cash Drawer Box Opened", "success");
-  };
-
-  const handleGoodsReturn = () => {
-    triggerToast("Mock Action: Goods Return transaction registered");
-  };
+  const handleGiftVoucher = () => {};
+  const handleOpenCashBox = () => {};
+  const handleGoodsReturn = () => {};
 
   const handleCancelItem = () => {
     if (billItems.length > 0) {
       const lastItem = billItems[billItems.length - 1];
       handleRemoveItem(lastItem.id);
-    } else {
-      triggerToast("No items to cancel", "warning");
     }
   };
 
-  const handleAddItem = () => {
-    triggerToast("Mock Action: Custom item adding panel");
-  };
+  const handleAddItem = () => {};
 
   const handleTerminateTransaction = () => {
-    if (billItems.length === 0) {
-      triggerToast("Cart is empty. Nothing to terminate.", "warning");
-      return;
-    }
-    triggerToast(`Transaction terminated. Total Settled: ₹${totalAmount.toFixed(2)}`, "success");
+    if (billItems.length === 0) return;
     setBillItems([]);
   };
 
-  const handlePrint = () => {
-    if (billItems.length === 0) {
-      triggerToast("Bill is empty. Add items to print receipt.", "warning");
-      return;
-    }
-    triggerToast("Mock Action: Printing receipt invoice...", "success");
-  };
-
-  const handleReservedTransaction = () => {
-    triggerToast("Mock Action: Transaction placed on Hold / Reserved");
-  };
+  const handlePrint = () => {};
+  const handleReservedTransaction = () => {};
 
   const handleDeleteAllTransaction = () => {
     if (billItems.length > 0) {
       setBillItems([]);
-      triggerToast("Deleted all items in current transaction", "error");
-    } else {
-      triggerToast("Nothing to delete", "warning");
     }
   };
 
-  const handleRestore = () => {
-    triggerToast("Mock Action: Restoring last transaction state");
-  };
-
-  const handleMainMenu = () => {
-    triggerToast("Mock Action: Redirecting to POS Main Menu");
-  };
+  const handleRestore = () => {};
+  const handleMainMenu = () => {};
 
   return (
     <AppLayout activePage="billing" onLogout={onLogout} onNavigate={onNavigate}>
@@ -240,30 +180,27 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
         onToggleSidebar={onToggleSidebar}
       />
 
-      {/* Toast Banner Notification */}
-      {toast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-xl px-5 py-3 shadow-lg text-white font-semibold transition-all duration-300 transform animate-bounce text-sm bg-slate-900 border border-white/10">
-          {toast.type === 'success' && <span className="text-emerald-400">✓</span>}
-          {toast.type === 'error' && <span className="text-rose-400">✗</span>}
-          {toast.type === 'warning' && <span className="text-amber-400">!</span>}
-          <span>{toast.message}</span>
-        </div>
-      )}
-
       {/* Main Content Area: 3-column layout */}
       <div className="flex-1 overflow-hidden bg-[#F8F8FB]">
         <div className="grid h-full grid-cols-1 gap-3 px-3 pb-2 lg:grid-cols-[450px_174px_minmax(420px,1fr)] lg:px-4">
-          
+
           {/* ==========================================
               LEFT PANEL (Billing / Cart Panel) — 40%
              ========================================== */}
           <div className="flex min-h-0 flex-col gap-2">
-            {/* Cart Bill Table */}
-            <BillTable
-              items={billItems}
-              onRemoveItem={handleRemoveItem}
-              onUpdateQuantity={handleUpdateQuantity}
-            />
+            {/* Cart Bill Table or Price Amendment */}
+            {showPriceAmendment ? (
+              <PriceAmendment
+                totalAmount={totalAmount}
+                onClose={() => setShowPriceAmendment(false)}
+              />
+            ) : (
+              <BillTable
+                items={billItems}
+                onRemoveItem={handleRemoveItem}
+                onUpdateQuantity={handleUpdateQuantity}
+              />
+            )}
 
             {/* Keypad Section */}
             <Keypad
@@ -297,6 +234,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
           <div className="flex min-h-0 flex-col overflow-hidden rounded-md border border-[#EEF0F6] bg-white">
             <ProductGrid
               items={MENU_ITEMS}
+              billItems={billItems}
               onAddItem={(item) => handleAddItemToBill(item, 1)}
               selectedCategory={selectedCategory}
               searchQuery={searchQuery}

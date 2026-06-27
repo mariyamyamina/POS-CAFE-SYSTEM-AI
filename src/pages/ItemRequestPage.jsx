@@ -67,13 +67,7 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
 
   return (
     <AppLayout activePage="itemRequest" onLogout={onLogout} onNavigate={onNavigate}>
-      <PageNavbar
-        title="Item Request"
-        dateLabel={formMode ? '05 June 2026' : '20 June 2026'}
-        dayLabel={formMode ? 'Friday' : 'Saturday'}
-        timeLabel={formMode ? '11:23 PM' : '11:01 PM'}
-        onToggleSidebar={onToggleSidebar}
-      />
+      <PageNavbar title="Item Request" onToggleSidebar={onToggleSidebar} />
 
       {formMode ? (
         <ItemRequestForm

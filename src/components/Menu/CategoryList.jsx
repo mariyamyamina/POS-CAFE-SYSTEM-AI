@@ -16,7 +16,7 @@ const CategoryList = ({ selectedCategory = "All Items", onSelectCategory }) => {
   ];
 
   return (
-    <div className="flex h-full flex-col justify-between gap-1">
+    <div className="flex h-full flex-col  gap-1">
       {categories.map((cat) => {
         const Icon = cat.icon;
         const isActive = selectedCategory === cat.id;
@@ -25,7 +25,7 @@ const CategoryList = ({ selectedCategory = "All Items", onSelectCategory }) => {
           <button
             key={cat.id}
             onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-            className={`flex min-h-[45px] w-full items-center gap-3 rounded-md px-3 text-[11px] font-semibold transition-all duration-200 ${isActive ? 'text-white' : 'bg-white text-text-900 hover:bg-text-100'
+            className={`flex h-[45px] w-full items-center gap-3 rounded-md px-3 text-[11px] font-semibold transition-all duration-200 ${isActive ? 'text-white' : 'bg-white text-text-900 hover:bg-text-100'
               }`}
             style={{
               background: isActive

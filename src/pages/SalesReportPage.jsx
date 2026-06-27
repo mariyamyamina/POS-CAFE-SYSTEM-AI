@@ -39,13 +39,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
 
   return (
     <AppLayout activePage="salesReport" onLogout={onLogout} onNavigate={onNavigate}>
-      <PageNavbar
-        title="Sales Report"
-        dateLabel="08 June 2026"
-        dayLabel="Monday"
-        timeLabel="02:40 PM"
-        onToggleSidebar={onToggleSidebar}
-      />
+      <PageNavbar title="Sales Report" onToggleSidebar={onToggleSidebar} />
 
       <main className="flex-1 overflow-y-auto px-3 pb-5 lg:px-5">
         <div className="flex min-h-full flex-col gap-4">

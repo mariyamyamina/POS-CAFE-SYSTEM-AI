@@ -1,12 +1,17 @@
 import React from 'react';
 
-const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
+const ProductCard = ({ item, onAdd, viewMode = "grid", quantity = 0 }) => {
   if (viewMode === "list") {
     return (
       <div
         onClick={() => onAdd && onAdd(item)}
-        className="flex cursor-pointer items-center justify-between rounded-md border border-text-100 bg-white p-2 transition-all hover:border-primary/30 hover:shadow-sm"
+        className="relative flex cursor-pointer items-center justify-between rounded-md border border-text-100 bg-white p-2 transition-all hover:border-primary/30 hover:shadow-sm"
       >
+        {quantity > 0 && (
+          <div className="absolute top-0 left-0 flex h-[18px] w-[18px] items-center justify-center rounded-br-md rounded-tl-md bg-primary text-[10px] font-bold text-white z-10">
+            {quantity}
+          </div>
+        )}
         <div className="flex min-w-0 items-center gap-3">
           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#F4F5F9]">
             <img
@@ -20,11 +25,11 @@ const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
             />
           </div>
           <div className="min-w-0 text-left">
-            <span className="block truncate text-xs font-semibold text-text-900">{item.name}</span>
+            <span className="block truncate text-xs font-semibold text-text-700">{item.name}</span>
             <span className="text-[10px] text-text-400">{item.category}</span>
           </div>
         </div>
-        <span className="ml-3 shrink-0 text-xs font-bold text-text-800">₹{item.price.toFixed(2)}</span>
+        <span className="ml-3 shrink-0 text-xs font-bold text-primary-600">₹{item.price.toFixed(2)}</span>
       </div>
     );
   }
@@ -32,8 +37,13 @@ const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
   return (
     <div
       onClick={() => onAdd && onAdd(item)}
-      className="flex h-full min-h-0 cursor-pointer flex-col items-center justify-between rounded-md border border-text-100 bg-white px-2 py-2 text-center transition-all hover:border-primary/35 hover:shadow-sm"
+      className="relative flex h-full min-h-0 cursor-pointer flex-col items-center justify-between rounded-md border border-text-100 bg-white px-2 py-2 text-center transition-all hover:border-primary/35 hover:shadow-sm overflow-hidden"
     >
+      {quantity > 0 && (
+        <div className="absolute top-0 left-0 flex h-5 w-5 items-center justify-center rounded-br-md rounded-tl-md bg-primary text-[11px] font-bold text-white z-10">
+          {quantity}
+        </div>
+      )}
       <div className="flex h-12 w-full items-center justify-center overflow-hidden">
         <img
           src={item.image}
@@ -50,7 +60,7 @@ const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
         <h4 className="line-clamp-2 text-[10px] font-semibold leading-tight text-text-900">
           {item.name}
         </h4>
-        <p className="mt-0.5 text-[11px] font-bold leading-none text-text-800">
+        <p className="mt-0.5 text-[10px] font-bold leading-none text-primary-800">
           ₹{item.price.toFixed(2)}
         </p>
       </div>

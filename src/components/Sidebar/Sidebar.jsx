@@ -27,10 +27,10 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="flex flex-col items-center justify-center px-5 pb-8 pt-5">
+        <div className="flex flex-col items-center justify-center px-5 pb-3 pt-5">
           <div className="flex flex-col items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/25">
-              <icons.coffee className="h-6 w-6 text-white" />
+              <icons.logo className="h-6 w-6 text-white" />
             </div>
             <h1 className="text-lg font-bold tracking-tight text-white">POS Cafe</h1>
           </div>

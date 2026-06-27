@@ -4,6 +4,7 @@ import { icons } from '../../constants/icons';
 
 const ProductGrid = ({
   items = [],
+  billItems = [],
   onAddItem,
   selectedCategory = "All Items",
   searchQuery = "",
@@ -43,14 +44,19 @@ const ProductGrid = ({
               ? "grid h-full grid-cols-4 grid-rows-5 gap-2"
               : "flex h-full flex-col gap-2 overflow-y-auto scrollbar-hide"
           }>
-            {paginatedItems.map((item) => (
-              <ProductCard
-                key={item.id}
-                item={item}
-                onAdd={onAddItem}
-                viewMode={viewMode}
-              />
-            ))}
+            {paginatedItems.map((item) => {
+              const billItem = billItems.find(b => b.id === item.id);
+              const quantity = billItem ? billItem.quantity : 0;
+              return (
+                <ProductCard
+                  key={item.id}
+                  item={item}
+                  quantity={quantity}
+                  onAdd={onAddItem}
+                  viewMode={viewMode}
+                />
+              );
+            })}
           </div>
         )}
       </div>

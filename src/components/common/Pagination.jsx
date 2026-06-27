@@ -6,7 +6,7 @@ const Pagination = ({
   totalPages = 2,
   pageSize = 10,
   totalItems = 13,
-  pageSizeOptions = [10, 25, 50],
+  pageSizeOptions = [5,8,10, 25, 50],
   onPageChange,
   onPageSizeChange,
 }) => {

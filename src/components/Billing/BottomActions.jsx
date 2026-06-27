@@ -32,7 +32,7 @@ const BottomActions = ({
             <span className="text-[11px] font-semibold">New Bill</span>
           </button>
 
-          <button type="button" className={`${purpleButton} flex-col border-r border-white/15`}>
+          <button onClick={onPriceAmendment} type="button" className={`${purpleButton} flex-col border-r border-white/15`}>
             <icons.fileText className="mb-1 h-5 w-5" />
             <span className="text-center text-[10px] font-semibold leading-tight">Price<br />Amendment</span>
           </button>

@@ -56,13 +56,7 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
 
   return (
     <AppLayout activePage="inventory" onLogout={onLogout} onNavigate={onNavigate}>
-      <PageNavbar
-        title="Inventory"
-        dateLabel={formMode ? '01 June 2026' : '30 May 2026'}
-        dayLabel={formMode ? 'Monday' : 'Saturday'}
-        timeLabel={formMode ? '09:20 PM' : '09:12 PM'}
-        onToggleSidebar={onToggleSidebar}
-      />
+      <PageNavbar title="Inventory" onToggleSidebar={onToggleSidebar} />
 
       {formMode ? (
         <InventoryItemForm
