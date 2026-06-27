@@ -29,7 +29,7 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate
       >
         <div className="flex flex-col items-center justify-center px-5 pb-8 pt-5">
           <div className="flex flex-col items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#7C3AED] shadow-lg shadow-[#7C3AED]/25">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/25">
               <icons.coffee className="h-6 w-6 text-white" />
             </div>
             <h1 className="text-lg font-bold tracking-tight text-white">POS Cafe</h1>
@@ -47,7 +47,7 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate
                   <button
                     className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-[12px] font-semibold transition-all duration-200 ${
                       isActive
-                        ? 'text-white shadow-md shadow-[#6D28D9]/30'
+                        ? 'text-white shadow-md shadow-primary-700/30'
                         : 'text-white hover:bg-white/5'
                     }`}
                     style={{
@@ -81,7 +81,7 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate
           </button>
 
           <div className="mt-3 flex items-center gap-3 border-t border-white/10 px-2 pt-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#7C3AED] text-sm font-bold uppercase text-white shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold uppercase text-white shadow-sm">
               A
             </div>
             <div className="flex min-w-0 flex-col text-left">

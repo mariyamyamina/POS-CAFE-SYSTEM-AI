@@ -10,7 +10,7 @@ const ProductGrid = ({
   viewMode = "grid"
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 16;
+  const itemsPerPage = 20;
 
   const filteredItems = items.filter((item) => {
     const matchesCategory = selectedCategory === "All Items" || item.category === selectedCategory;
@@ -31,17 +31,17 @@ const ProductGrid = ({
       <div className="flex-1 min-h-0 px-3 py-2">
         {paginatedItems.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center p-6 text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F3F5F9] text-[#6E768E]">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-text-100 text-text-500">
               <icons.search className="h-7 w-7" />
             </div>
-            <h3 className="text-base font-bold text-[#10112B]">No items found</h3>
-            <p className="mt-1 text-xs text-[#6E768E]">Try another category or search term.</p>
+            <h3 className="text-base font-bold text-text-900">No items found</h3>
+            <p className="mt-1 text-xs text-text-500">Try another category or search term.</p>
           </div>
         ) : (
           <div className={
             viewMode === "grid"
-              ? "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4"
-              : "flex flex-col gap-2"
+              ? "grid h-full grid-cols-4 grid-rows-5 gap-2"
+              : "flex h-full flex-col gap-2 overflow-y-auto scrollbar-hide"
           }>
             {paginatedItems.map((item) => (
               <ProductCard
@@ -67,7 +67,7 @@ const ProductGrid = ({
                 onClick={() => setCurrentPage(pageNum)}
                 type="button"
                 className={`h-2.5 rounded-full transition-all duration-200 ${
-                  isActive ? 'w-2.5 bg-[#7C3AED]' : 'w-2.5 bg-[#DFE2EA] hover:bg-[#A0A8C0]'
+                  isActive ? 'w-2.5 bg-primary' : 'w-2.5 bg-text-200 hover:bg-text-300'
                 }`}
                 aria-label={`Go to page ${pageNum}`}
               />

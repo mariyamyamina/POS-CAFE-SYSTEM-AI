@@ -4,6 +4,7 @@
   "description": "Production-ready POS Café System UI in React + Vite",
   "private": true,
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0"

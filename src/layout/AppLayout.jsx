@@ -13,7 +13,7 @@ const AppLayout = ({ children, activePage = 'billing', onLogout, onNavigate }) =
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F8F8FB] font-sans antialiased text-[#10112B]">
+    <div className="flex h-screen w-screen overflow-hidden bg-text-50 font-sans antialiased text-text-900">
       <Sidebar
         activePage={activePage}
         isOpen={isMobileSidebarOpen}

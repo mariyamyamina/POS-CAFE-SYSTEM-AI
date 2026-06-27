@@ -66,8 +66,8 @@ const Keypad = ({
     if (updateFn) updateFn(activeVal.slice(0, -1));
   };
 
-  const inputClass = (field) => `h-8 w-full rounded-md border px-3 text-[10px] font-medium outline-none transition-all placeholder:text-[#7A55F4] ${
-    activeField === field ? 'border-[#7C3AED] bg-white' : 'border-[#DEE2EC] bg-white'
+  const inputClass = (field) => `h-8 w-full rounded-md border px-3 text-[10px] font-medium outline-none transition-all placeholder:text-primary-400 ${
+    activeField === field ? 'border-primary bg-white' : 'border-text-200 bg-white'
   }`;
 
   return (
@@ -75,7 +75,7 @@ const Keypad = ({
       <div className="grid grid-cols-[1fr_122px_68px] gap-2">
         <div className="flex flex-col gap-2 mt-3">
           <div>
-            <label className="mb-1 block text-[11px] font-semibold text-[#2F3470]">Item Number</label>
+            <label className="mb-1 block text-[11px] font-semibold text-text">Item Number</label>
             <div className="relative">
               <input
                 ref={itemRef}
@@ -84,16 +84,16 @@ const Keypad = ({
                 value={itemNumber}
                 onFocus={() => onActiveFieldChange && onActiveFieldChange("item")}
                 onChange={(e) => onItemNumberChange && onItemNumberChange(e.target.value)}
-                className="h-8 w-full rounded-md border border-[#DEE2EC] bg-white pl-3 pr-9 text-[10px] font-medium text-[#10112B] outline-none transition-all placeholder:text-[#7A55F4] focus:border-[#7C3AED]"
+                className="h-8 w-full rounded-md border border-text-200 bg-white pl-3 pr-9 text-[10px] font-medium text-text-900 outline-none transition-all placeholder:text-primary-400 focus:border-primary"
               />
-              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-[#10112B]">
+              <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-text-900">
                 <icons.barcode className="h-5 w-5" />
               </div>
             </div>
           </div>
 
           <div className='mt-3'>
-            <label className="mb-1 block text-[11px] font-semibold text-[#2F3470]">Table No</label>
+            <label className="mb-1 block text-[11px] font-semibold text-text">Table No</label>
             <input
               ref={tableRef}
               type="text"
@@ -106,7 +106,7 @@ const Keypad = ({
           </div>
 
           <div className='mt-3'>
-            <label className="mb-1 block text-[11px] font-semibold text-[#2F3470]">No of Cover</label>
+            <label className="mb-1 block text-[11px] font-semibold text-text">No of Cover</label>
             <input
               ref={coversRef}
               type="text"
@@ -121,21 +121,21 @@ const Keypad = ({
 
         <div className="flex flex-col gap-2 mt-3">
           <div>
-            <label className="mb-1 block text-[11px] font-semibold text-[#2F3470]">Quantity</label>
+            <label className="mb-1 block text-[11px] font-semibold text-text">Quantity</label>
             <div className="grid h-8 grid-cols-3 gap-1">
               <button
                 onClick={() => onQuantityChange && onQuantityChange(Math.max(1, quantity - 1))}
-                className="rounded-md bg-[#F4F5F9] text-xs font-bold text-[#111333] transition-colors hover:bg-[#ECEEF5]"
+                className="rounded-md bg-[#F4F5F9] text-xs font-bold text-text-900 transition-colors hover:bg-[#ECEEF5]"
                 type="button"
               >
                 -
               </button>
-              <div className="flex items-center justify-center rounded-md border border-[#DEE2EC] bg-white text-xs font-bold text-[#111333]">
+              <div className="flex items-center justify-center rounded-md border border-text-200 bg-white text-xs font-bold text-text-900">
                 {quantity}
               </div>
               <button
                 onClick={() => onQuantityChange && onQuantityChange(quantity + 1)}
-                className="rounded-md bg-[#F4F5F9] text-xs font-bold text-[#111333] transition-colors hover:bg-[#ECEEF5]"
+                className="rounded-md bg-[#F4F5F9] text-xs font-bold text-text-900 transition-colors hover:bg-[#ECEEF5]"
                 type="button"
               >
                 +
@@ -147,77 +147,77 @@ const Keypad = ({
             <button
               onClick={() => handleKeyPress('7')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               7
             </button>
             <button
               onClick={() => handleKeyPress('8')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               8
             </button>
             <button
               onClick={() => handleKeyPress('9')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               9
             </button>
             <button
               onClick={() => handleKeyPress('4')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               4
             </button>
             <button
               onClick={() => handleKeyPress('5')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               5
             </button>
             <button
               onClick={() => handleKeyPress('6')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               6
             </button>
             <button
               onClick={() => handleKeyPress('1')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               1
             </button>
             <button
               onClick={() => handleKeyPress('2')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               2
             </button>
             <button
               onClick={() => handleKeyPress('3')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               3
             </button>
             <button
               onClick={() => handleKeyPress('0')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               0
             </button>
             <button
               onClick={() => handleKeyPress('.')}
               type="button"
-              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-[#151746] transition-colors hover:bg-[#ECEEF5]"
+              className="flex h-8 items-center justify-center rounded-md bg-[#F4F5F9] text-xs font-bold text-text-800 transition-colors hover:bg-[#ECEEF5]"
             >
               .
             </button>
@@ -239,21 +239,21 @@ const Keypad = ({
            <button
             onClick={onAdd}
             type="button"
-            className="h-8 rounded-md bg-[#6230EA] text-[11px] font-bold text-white transition-colors hover:bg-[#5528D4]"
+            className="h-8 rounded-md bg-primary-700 text-[11px] font-bold text-white transition-colors hover:bg-primary-800"
           >
             Add
           </button>
           <button
             onClick={handleAC}
             type="button"
-            className="h-8 rounded-md bg-[#6230EA] text-xs font-bold text-white transition-colors hover:bg-[#5528D4]"
+            className="h-8 rounded-md bg-primary-700 text-xs font-bold text-white transition-colors hover:bg-primary-800"
           >
             AC
           </button>
           <button
             onClick={handleClearLast}
             type="button"
-            className="h-8 rounded-md bg-[#6230EA] text-[11px] font-bold text-white transition-colors hover:bg-[#5528D4]"
+            className="h-8 rounded-md bg-primary-700 text-[11px] font-bold text-white transition-colors hover:bg-primary-800"
           >
             Clear
           </button>

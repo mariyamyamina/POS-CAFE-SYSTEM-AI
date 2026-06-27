@@ -25,9 +25,8 @@ const CategoryList = ({ selectedCategory = "All Items", onSelectCategory }) => {
           <button
             key={cat.id}
             onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-            className={`flex min-h-[45px] w-full items-center gap-3 rounded-md px-3 text-[12px] font-semibold transition-all duration-200 ${
-              isActive ? 'text-white' : 'bg-white text-[#10112B] hover:bg-[#F4F5F9]'
-            }`}
+            className={`flex min-h-[45px] w-full items-center gap-3 rounded-md px-3 text-[11px] font-semibold transition-all duration-200 ${isActive ? 'text-white' : 'bg-white text-text-900 hover:bg-text-100'
+              }`}
             style={{
               background: isActive
                 ? `linear-gradient(135deg, ${colors.gradientStart} 0%, ${colors.gradientEnd} 100%)`
@@ -35,8 +34,10 @@ const CategoryList = ({ selectedCategory = "All Items", onSelectCategory }) => {
             }}
             type="button"
           >
-            <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-white' : 'text-[#4B558E]'}`} />
-            <span className="truncate">{cat.label}</span>
+            <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-white' : 'text-text-600'}`} />
+            <span className="whitespace-normal break-words text-left leading-4">
+              {cat.label}
+            </span>
           </button>
         );
       })}

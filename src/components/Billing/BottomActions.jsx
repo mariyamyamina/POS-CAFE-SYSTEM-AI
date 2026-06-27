@@ -17,7 +17,7 @@ const BottomActions = ({
   onRestore,
   onMainMenu,
 }) => {
-  const purpleButton = "flex min-h-[43px] items-center justify-center bg-[#7C35EA] text-white transition-colors hover:bg-[#6D28D9]";
+  const purpleButton = "flex min-h-[43px] items-center justify-center bg-primary-600 text-white transition-colors hover:bg-primary-700";
   const tealButton = "flex min-h-[43px] flex-col items-center justify-center bg-[#36AFA6] px-1 text-center text-white transition-colors hover:bg-[#299C94]";
   const orangeButton = "flex min-h-[43px] items-center justify-center gap-2 bg-[#FF973E] px-2 text-white transition-colors hover:bg-[#ED842F]";
 

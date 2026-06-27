@@ -34,7 +34,7 @@ const Field = ({ label, icon: Icon, placeholder, type = 'text', withEye = false,
     <span className={`${compact ? 'mb-1.5' : 'mb-2'} block text-[12px] font-semibold text-slate-950`}>
       {label}
     </span>
-    <span className={`${compact ? 'h-[36px]' : 'h-[38px]'} flex items-center rounded-md border border-slate-200 bg-white px-3 shadow-[0_1px_0_rgba(15,23,42,0.02)] transition focus-within:border-violet-500 focus-within:ring-2 focus-within:ring-violet-100`}>
+    <span className={`${compact ? 'h-[36px]' : 'h-[38px]'} flex items-center rounded-md border border-slate-200 bg-white px-3 shadow-[0_1px_0_rgba(15,23,42,0.02)] transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100`}>
       <Icon className="mr-4 text-[13px] text-slate-400" />
       <input
         type={type}
@@ -57,13 +57,13 @@ const BrandPanel = () => (
     />
     <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,0,45,0.98)_0%,rgba(19,0,90,0.84)_43%,rgba(19,0,90,0.22)_100%)]" />
     <div className="relative z-10 flex min-h-screen max-w-[430px] flex-col justify-center px-14 py-10">
-      <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-full bg-violet-600 text-3xl shadow-2xl shadow-violet-950/40">
+      <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-3xl shadow-2xl shadow-primary-900/40">
         <FaCoffee />
       </div>
 
       <h1 className="text-[34px] font-extrabold leading-none tracking-normal">POS Cafe</h1>
       <p className="mt-4 text-[17px] font-medium text-indigo-100/80">Point of Sale System</p>
-      <div className="mt-6 h-1 w-[68px] rounded-full bg-violet-500" />
+      <div className="mt-6 h-1 w-[68px] rounded-full bg-primary-500" />
 
       <div className="mt-7">
         <h2 className="text-[16px] font-extrabold">Smart Billing. Happy Business.</h2>
@@ -92,7 +92,7 @@ const BrandPanel = () => (
 const DotPattern = () => (
   <div className="absolute right-7 top-6 grid grid-cols-4 gap-2">
     {Array.from({ length: 16 }).map((_, index) => (
-      <span key={index} className="h-1.5 w-1.5 rounded-full bg-violet-200/70" />
+      <span key={index} className="h-1.5 w-1.5 rounded-full bg-primary-200/70" />
     ))}
   </div>
 );
@@ -109,7 +109,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
 
         <div className="w-full max-w-[416px]">
           <div className={`${isRegister ? 'mb-3' : 'mb-5'} flex justify-center`}>
-            <div className={`${isRegister ? 'h-14 w-14 text-2xl' : 'h-16 w-16 text-3xl'} flex items-center justify-center rounded-full bg-violet-600 text-white shadow-xl shadow-violet-100`}>
+            <div className={`${isRegister ? 'h-14 w-14 text-2xl' : 'h-16 w-16 text-3xl'} flex items-center justify-center rounded-full bg-primary-600 text-white shadow-xl shadow-primary-100`}>
               <FaCoffee />
             </div>
           </div>
@@ -118,7 +118,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
             <h2 className="text-[24px] font-extrabold leading-tight text-slate-950">
               {isRegister ? 'Create Your Account' : 'Welcome Back!'}
             </h2>
-            <p className={`${isRegister ? 'mt-1' : 'mt-2'} text-[13px] font-semibold text-[#273175]`}>
+            <p className={`${isRegister ? 'mt-1' : 'mt-2'} text-[13px] font-semibold text-text-700`}>
               {isRegister
                 ? 'Join POS Cafe and start managing your business smarter.'
                 : 'Sign in to continue to POS Cafe'}
@@ -157,15 +157,15 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
                 <input
                   type="checkbox"
                   defaultChecked
-                  className="h-3.5 w-3.5 accent-violet-600"
+                  className="h-3.5 w-3.5 accent-primary-600"
                 />
                 <span>
                   I agree to the{' '}
-                  <button type="button" className="font-semibold text-violet-600">
+                  <button type="button" className="font-semibold text-primary-600">
                     Terms and Conditions
                   </button>{' '}
                   and{' '}
-                  <button type="button" className="font-semibold text-violet-600">
+                  <button type="button" className="font-semibold text-primary-600">
                     Privacy Policy
                   </button>
                 </span>
@@ -176,11 +176,11 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
                   <input
                     type="checkbox"
                     defaultChecked
-                    className="h-4 w-4 accent-violet-600"
+                    className="h-4 w-4 accent-primary-600"
                   />
                   Remember me
                 </label>
-                <button type="button" className="font-semibold text-violet-600">
+                <button type="button" className="font-semibold text-primary-600">
                   Forgot Password?
                 </button>
               </div>
@@ -189,7 +189,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
             <button
               type="button"
               onClick={isRegister ? onShowLogin : onLogin}
-              className={`${isRegister ? 'h-10' : 'h-10'} flex w-full items-center justify-center gap-3 rounded-[9px] bg-violet-600 text-[14px] font-extrabold text-white shadow-lg shadow-violet-100 transition hover:bg-violet-700`}
+              className={`${isRegister ? 'h-10' : 'h-10'} flex w-full items-center justify-center gap-3 rounded-[9px] bg-primary-600 text-[14px] font-extrabold text-white shadow-lg shadow-primary-100 transition hover:bg-primary-700`}
             >
               {isRegister ? <FaBriefcase /> : <FaLock />}
               {isRegister ? 'Create Account' : 'Sign In'}
@@ -208,7 +208,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
               <button
                 type="button"
                 onClick={onShowLogin}
-                className="font-extrabold text-violet-600"
+                className="font-extrabold text-primary-600"
               >
                 Sign In
               </button>
@@ -217,7 +217,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
             <button
               type="button"
               onClick={onShowRegister}
-              className="flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border-2 border-violet-600 bg-white text-[14px] font-extrabold text-violet-600 transition hover:bg-violet-50"
+              className="flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border-2 border-primary-600 bg-white text-[14px] font-extrabold text-primary-600 transition hover:bg-primary-50"
             >
               <FaBriefcase />
               Register

@@ -5,7 +5,7 @@ const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
     return (
       <div
         onClick={() => onAdd && onAdd(item)}
-        className="flex cursor-pointer items-center justify-between rounded-md border border-[#EEF0F6] bg-white p-2 transition-all hover:border-[#7C3AED]/30 hover:shadow-sm"
+        className="flex cursor-pointer items-center justify-between rounded-md border border-text-100 bg-white p-2 transition-all hover:border-primary/30 hover:shadow-sm"
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#F4F5F9]">
@@ -20,11 +20,11 @@ const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
             />
           </div>
           <div className="min-w-0 text-left">
-            <span className="block truncate text-xs font-semibold text-[#10112B]">{item.name}</span>
-            <span className="text-[10px] text-[#6B7194]">{item.category}</span>
+            <span className="block truncate text-xs font-semibold text-text-900">{item.name}</span>
+            <span className="text-[10px] text-text-400">{item.category}</span>
           </div>
         </div>
-        <span className="ml-3 shrink-0 text-xs font-bold text-[#171A4A]">₹{item.price.toFixed(2)}</span>
+        <span className="ml-3 shrink-0 text-xs font-bold text-text-800">₹{item.price.toFixed(2)}</span>
       </div>
     );
   }
@@ -32,7 +32,7 @@ const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
   return (
     <div
       onClick={() => onAdd && onAdd(item)}
-      className="flex h-[103px] cursor-pointer flex-col items-center justify-between rounded-md border border-[#EEF0F6] bg-white px-2 py-2 text-center transition-all hover:border-[#7C3AED]/35 hover:shadow-sm"
+      className="flex h-full min-h-0 cursor-pointer flex-col items-center justify-between rounded-md border border-text-100 bg-white px-2 py-2 text-center transition-all hover:border-primary/35 hover:shadow-sm"
     >
       <div className="flex h-12 w-full items-center justify-center overflow-hidden">
         <img
@@ -47,10 +47,10 @@ const ProductCard = ({ item, onAdd, viewMode = "grid" }) => {
       </div>
 
       <div className="min-w-0">
-        <h4 className="line-clamp-2 text-[10px] font-semibold leading-tight text-[#01042A]">
+        <h4 className="line-clamp-2 text-[10px] font-semibold leading-tight text-text-900">
           {item.name}
         </h4>
-        <p className="mt-0.5 text-[11px] font-bold leading-none text-[#18205A]">
+        <p className="mt-0.5 text-[11px] font-bold leading-none text-text-800">
           ₹{item.price.toFixed(2)}
         </p>
       </div>
