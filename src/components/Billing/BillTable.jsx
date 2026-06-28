@@ -30,11 +30,11 @@ const BillTable = ({ items = [], onRemoveItem, onUpdateQuantity }) => {
               return (
                 <div
                   key={item.id}
-                  className="group grid grid-cols-[2fr_0.75fr_1fr_1fr] items-center gap-2 px-4 py-3 transition-colors hover:bg-text-50"
+                  className="group grid grid-cols-[2fr_0.75fr_1fr_1fr] items-center gap-2 px-4 py-1 transition-colors hover:bg-text-50"
                 >
                   <div className="flex min-w-0 items-center gap-3 pr-2">
                     {imageUrl && (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#F4F5F9] overflow-hidden">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#F4F5F9] overflow-hidden">
                         <img 
                           src={imageUrl} 
                           alt={item.name} 
@@ -47,17 +47,17 @@ const BillTable = ({ items = [], onRemoveItem, onUpdateQuantity }) => {
                       </div>
                     )}
                     <div className="min-w-0">
-                      <span className="block truncate text-[13px] font-semibold text-text-900">{item.name}</span>
-                      <span className="text-[11px] font-medium text-text-400">{item.id % 100}</span>
+                      <span className="block truncate text-[11px] font-semibold text-text-900 pt-1">{item.name}</span>
+                      <span className="text-[10px] font-medium text-text-400">{item.id % 100}</span>
                     </div>
                   </div>
                   <div className="flex justify-center">
-                    <div className="flex h-8 w-10 items-center justify-center rounded-md border border-text-200 text-xs font-bold text-text-900">
+                    <div className="flex h-7 w-8 items-center justify-center rounded-md border border-text-200 text-xs font-bold text-text-900">
                       {item.quantity}
                     </div>
                   </div>
-                  <div className="text-right text-[13px] font-semibold text-text-600">₹{item.unitPrice.toFixed(2)}</div>
-                  <div className="relative pr-6 text-right text-[13px] font-bold text-text-900">
+                  <div className="text-right text-[11px] font-semibold text-text-600">₹{item.unitPrice.toFixed(2)}</div>
+                  <div className="relative pr-6 text-right text-[11px] font-bold text-text-900">
                     ₹{(item.quantity * item.unitPrice).toFixed(2)}
                     <button
                       onClick={() => onRemoveItem && onRemoveItem(item.id)}
@@ -65,7 +65,7 @@ const BillTable = ({ items = [], onRemoveItem, onUpdateQuantity }) => {
                       type="button"
                       aria-label={`Remove ${item.name}`}
                     >
-                      <icons.trash className="h-[14px] w-[14px]" />
+                      <icons.trash className="h-[13px] w-[13px]" />
                     </button>
                   </div>
                 </div>

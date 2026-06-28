@@ -35,6 +35,13 @@ import {
   FiSave,
   FiSend,
   FiInfo,
+  FiShoppingBag,
+  FiBarChart2,
+  FiBox,
+  FiBell,
+  FiArrowUp,
+  FiArrowDown,
+  FiAlertTriangle,
 } from 'react-icons/fi';
 
 import {
@@ -191,5 +198,15 @@ export const icons = {
   chevronLeft: BiChevronLeft,
   chevronRight: BiChevronRight,
   logo:RiCupLine,
+
+  // Dashboard
+  sales: FiFileText,
+  orders: FiShoppingBag,
+  barChart: FiBarChart2,
+  box: FiBox,
+  bell: FiBell,
+  arrowUp: FiArrowUp,
+  arrowDown: FiArrowDown,
+  alertTriangle: FiAlertTriangle,
   
 };
