@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AppLayout from '../layout/AppLayout';
 import PageNavbar from '../components/common/PageNavbar';
 import Pagination from '../components/common/Pagination';
@@ -6,23 +6,54 @@ import UsersFilterBar from '../components/Users/UsersFilterBar';
 import UsersTable from '../components/Users/UsersTable';
 import UserFormModal from '../components/Users/UserFormModal';
 import { icons } from '../constants/icons';
+import { authApi } from '../api/index';
 
-const USERS_ITEMS = [
-  { id: 1,  firstName: 'Fouzan',       lastName: 'M', username: 'fouzan',      email: 'fouzan@poscafe.com',      role: 'Cashier',     phone: '7890987890', status: 'Active', createdAtDate: '22 June 2026', createdAtTime: '04:54 pm' },
-  { id: 2,  firstName: 'Mohamed Ahyan',lastName: 'M', username: 'ahyan',       email: 'ahyan@poscafe.com',       role: 'Manager',     phone: '8345908224', status: 'Active', createdAtDate: '22 June 2026', createdAtTime: '02:13 pm' },
-  { id: 3,  firstName: 'Shakthi',      lastName: 'S', username: 'shakthi',     email: 'shakthi@poscafe.com',     role: 'Supervisor',  phone: '8909872343', status: 'Active', createdAtDate: '22 June 2026', createdAtTime: '02:12 pm' },
-  { id: 4,  firstName: 'Ezhilmathi',   lastName: 'K', username: 'ezhilmathi',  email: 'ezhil@gmail.com',         role: 'Cashier',     phone: '8905678987', status: 'Active', createdAtDate: '22 June 2026', createdAtTime: '10:08 am' },
-  { id: 5,  firstName: 'kalai selvi',  lastName: 'S', username: 'kalaiselvi',  email: 'kalaiselvis@poscafe.com', role: 'Accountant',  phone: '7890125676', status: 'Active', createdAtDate: '21 June 2026', createdAtTime: '02:37 pm' },
-  { id: 6,  firstName: 'Priya',        lastName: 'R', username: 'priya',       email: 'priya@poscafe.com',       role: 'Cashier',     phone: '9876543210', status: 'Active', createdAtDate: '20 June 2026', createdAtTime: '11:20 am' },
-  { id: 7,  firstName: 'Arun',         lastName: 'T', username: 'arun',        email: 'arun@poscafe.com',        role: 'Manager',     phone: '9812345670', status: 'Inactive',createdAtDate: '19 June 2026', createdAtTime: '09:15 am' },
-  { id: 8,  firstName: 'Deepa',        lastName: 'V', username: 'deepa',       email: 'deepa@poscafe.com',       role: 'Supervisor',  phone: '9900112233', status: 'Active', createdAtDate: '18 June 2026', createdAtTime: '03:45 pm' },
-  { id: 9,  firstName: 'Suresh',       lastName: 'N', username: 'suresh',      email: 'suresh@poscafe.com',      role: 'Cashier',     phone: '9988776655', status: 'Active', createdAtDate: '17 June 2026', createdAtTime: '01:30 pm' },
-  { id: 10, firstName: 'Meena',        lastName: 'L', username: 'meena',       email: 'meena@poscafe.com',       role: 'Accountant',  phone: '9871234560', status: 'Pending',createdAtDate: '16 June 2026', createdAtTime: '04:00 pm' },
-];
+const transformUserData = (users) => {
+  return users.map((user) => {
+    const nameParts = (user.fullName || user.full_name || '').split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
+    const createdAt = new Date(user.created_at);
+    const createdAtDate = createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const createdAtTime = createdAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    return {
+      id: user.id,
+      firstName,
+      lastName,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      phone: user.phone || '',
+      status: user.isActive || user.is_active ? 'Active' : 'Inactive',
+      createdAtDate,
+      createdAtTime,
+    };
+  });
+};
 
-const UsersPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
+const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const data = await authApi.getUsers();
+        const transformedData = transformUserData(data);
+        setUsers(transformedData);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   // Modal state: whether it's open, which mode ('add' | 'edit'), and which
   // user (if any) is being edited.
@@ -30,11 +61,11 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   const [modalMode, setModalMode] = useState('add');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const totalPages = Math.ceil(USERS_ITEMS.length / pageSize);
+  const totalPages = Math.ceil(users.length / pageSize);
   const visibleItems = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return USERS_ITEMS.slice(start, start + pageSize);
-  }, [page, pageSize]);
+    return users.slice(start, start + pageSize);
+  }, [page, pageSize, users]);
 
   const handlePageSizeChange = (nextPageSize) => {
     setPageSize(nextPageSize);
@@ -62,20 +93,57 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
     setSelectedUser(null);
   };
 
-  const handleSaveUser = (formValues) => {
-    // Wire this up to your create/update API call.
-    console.log(modalMode === 'edit' ? 'Update user:' : 'Create user:', formValues);
-    handleCloseModal();
+  const handleSaveUser = async (formValues) => {
+    try {
+      const fullName = `${formValues.firstName} ${formValues.lastName}`.trim();
+      const payload = {
+        fullName,
+        username: formValues.username,
+        email: formValues.email,
+        role: formValues.role,
+        isActive: formValues.isActive,
+        phone: formValues.phone,
+      };
+
+      // Only include password if it's provided (for new users or when changing password)
+      if (formValues.password) {
+        payload.password = formValues.password;
+      }
+
+      if (modalMode === 'edit') {
+        await authApi.updateUser(formValues.id, payload);
+      } else {
+        await authApi.createUser(payload);
+      }
+
+      // Refresh the users list
+      const data = await authApi.getUsers();
+      const transformedData = transformUserData(data);
+      setUsers(transformedData);
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to save user:', error);
+      alert(error.message || 'Failed to save user');
+    }
   };
 
-  const handleDeleteUser = (user) => {
-    // Wire this up to your delete API call.
-    console.log('Delete user:', user);
-    handleCloseModal();
+  const handleDeleteUser = async (user) => {
+    try {
+      await authApi.deleteUser(user.id);
+      
+      // Refresh the users list
+      const data = await authApi.getUsers();
+      const transformedData = transformUserData(data);
+      setUsers(transformedData);
+      handleCloseModal();
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert(error.message || 'Failed to delete user');
+    }
   };
 
   return (
-    <AppLayout activePage="users" onLogout={onLogout} onNavigate={onNavigate}>
+    <AppLayout activePage="users" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Users Management" onToggleSidebar={onToggleSidebar} />
 
       <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-4">
@@ -88,7 +156,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
               <div>
                 <h2 className="text-[16px] font-bold text-[#111827]">Users List</h2>
                 <p className="mt-0.5 text-[12px] font-medium text-[#7C3AED]">
-                  Total {USERS_ITEMS.length} users
+                  Total {users.length} users
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -110,13 +178,19 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
               </div>
             </div>
 
-            <UsersTable items={visibleItems} onEditUser={handleEditUser} />
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-sm text-gray-500">Loading users...</div>
+              </div>
+            ) : (
+              <UsersTable items={visibleItems} onEditUser={handleEditUser} />
+            )}
 
             <Pagination
               page={page}
               totalPages={totalPages}
               pageSize={pageSize}
-              totalItems={USERS_ITEMS.length}
+              totalItems={users.length}
               onPageChange={setPage}
               onPageSizeChange={handlePageSizeChange}
             />

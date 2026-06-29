@@ -1,7 +1,7 @@
 import React from 'react';
 import { icons } from '../../constants/icons';
 
-const DashboardHeader = ({ onToggleSidebar }) => {
+const DashboardHeader = ({ onToggleSidebar, user }) => {
   const today = new Date();
   const formattedDate = today.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -53,14 +53,14 @@ const DashboardHeader = ({ onToggleSidebar }) => {
           <icons.bell className="h-4 w-4" />
         </button>
 
-        {/* Admin */}
+        {/* User */}
         <div className="flex items-center gap-2 rounded-lg border border-text-100 bg-white px-2 py-1.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[12px] font-bold text-white">
-            A
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[12px] font-bold uppercase text-white">
+            {user?.username?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="hidden flex-col leading-tight sm:flex">
-            <span className="text-[12px] font-semibold text-text-900">admin</span>
-            <span className="text-[10px] text-text-400">admin</span>
+            <span className="text-[12px] font-semibold text-text-900">{user?.username || 'User'}</span>
+            <span className="text-[10px] text-text-400">{user?.role || 'Cashier'}</span>
           </div>
           <icons.chevronDown className="h-3.5 w-3.5 text-text-400" />
         </div>

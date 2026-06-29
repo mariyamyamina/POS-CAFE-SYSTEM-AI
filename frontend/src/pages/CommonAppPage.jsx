@@ -10,11 +10,11 @@ const PAGE_TITLES = {
   settings: 'Settings',
 };
 
-const CommonAppPage = ({ page, onToggleSidebar, onLogout, onNavigate }) => {
+const CommonAppPage = ({ page, onToggleSidebar, onLogout, onNavigate, user }) => {
   const title = PAGE_TITLES[page] || 'Page';
 
   return (
-    <AppLayout activePage={page} onLogout={onLogout} onNavigate={onNavigate}>
+    <AppLayout activePage={page} onLogout={onLogout} onNavigate={onNavigate} user={user}>
       {page !== 'dashboard' && <PageNavbar title={title} onToggleSidebar={onToggleSidebar} />}
       <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-4">
         <section className="rounded-lg border border-[#EAECF3] bg-white p-6 shadow-[0_2px_8px_rgba(20,18,56,0.04)]">

@@ -14,7 +14,7 @@ const SECTIONS = [
   { key: 'users', title: 'User Settings', Panel: UserSettingsPanel },
 ];
 
-const SettingsPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
+const SettingsPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   // Only one section is expanded at a time, matching the design.
   const [openSection, setOpenSection] = useState(null);
 
@@ -23,7 +23,7 @@ const SettingsPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   };
 
   return (
-    <AppLayout activePage="settings" onLogout={onLogout} onNavigate={onNavigate}>
+    <AppLayout activePage="settings" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Settings" onToggleSidebar={onToggleSidebar} />
 
       <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-4">

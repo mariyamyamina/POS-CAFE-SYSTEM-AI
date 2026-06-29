@@ -34,7 +34,7 @@ const REQUESTS = [
   },
 ];
 
-const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
+const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [formMode, setFormMode] = useState(null);
@@ -66,7 +66,7 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   };
 
   return (
-    <AppLayout activePage="itemRequest" onLogout={onLogout} onNavigate={onNavigate}>
+    <AppLayout activePage="itemRequest" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Item Request" onToggleSidebar={onToggleSidebar} />
 
       {formMode ? (

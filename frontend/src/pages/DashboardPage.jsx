@@ -37,10 +37,10 @@ const stockColor = (level) => {
     return 'text-emerald-500';
 };
 
-const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
+const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     return (
-        <AppLayout activePage="dashboard" onLogout={onLogout} onNavigate={onNavigate}>
-            <DashboardHeader onToggleSidebar={onToggleSidebar} />
+        <AppLayout activePage="dashboard" onLogout={onLogout} onNavigate={onNavigate} user={user}>
+            <DashboardHeader onToggleSidebar={onToggleSidebar} user={user} />
 
             <div className="flex-1 overflow-y-auto bg-[#F8F8FB] px-4 py-4 lg:px-6 scrollbar-thin">
 

@@ -23,7 +23,7 @@ const SALES_REPORTS = [
   { id: 14, itemName: 'Green Tea', soldQuantity: 1, totalPrice: 30 },
 ];
 
-const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
+const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
   const totalPages = Math.ceil(SALES_REPORTS.length / pageSize);
@@ -38,7 +38,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   };
 
   return (
-    <AppLayout activePage="salesReport" onLogout={onLogout} onNavigate={onNavigate}>
+    <AppLayout activePage="salesReport" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Sales Report" onToggleSidebar={onToggleSidebar} />
 
       <main className="flex-1 overflow-y-auto px-3 pb-5 lg:px-5">

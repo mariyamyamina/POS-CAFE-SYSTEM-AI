@@ -2,7 +2,7 @@ import React from 'react';
 import { colors } from '../../constants/colors';
 import { icons } from '../../constants/icons';
 
-const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate }) => {
+const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate, user }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: icons.dashboard },
     { id: 'billing', label: 'Billing', icon: icons.billing },
@@ -82,11 +82,11 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate
 
           <div className="mt-3 flex items-center gap-3 border-t border-white/10 px-2 pt-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-bold uppercase text-white shadow-sm">
-              A
+              {user?.username?.charAt(0).toUpperCase() || 'U'}
             </div>
             <div className="flex min-w-0 flex-col text-left">
-              <span className="truncate text-sm font-semibold text-white">admin</span>
-              <span className="truncate text-xs text-white/55">@admin</span>
+              <span className="truncate text-xs text-white">{user?.role || 'Cashier'}</span>
+              <span className="truncate text-xs font-semibold text-white/55">@{user?.username || 'User'}</span>
             </div>
           </div>
         </div>

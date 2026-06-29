@@ -34,7 +34,7 @@ const MENU_ITEMS = [
   { id: 125, name: 'egg puff', price: 30, category: 'Steamed Bun', image: 'images/egg-puff.png' },
 ];
 
-const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
+const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [billItems, setBillItems]           = useState([]);
   const [itemNumberInput, setItemNumberInput] = useState('');
   const [quantityInput, setQuantityInput]   = useState(1);
@@ -109,7 +109,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   );
 
   return (
-    <AppLayout activePage="billing" onLogout={onLogout} onNavigate={onNavigate}>
+    <AppLayout activePage="billing" onLogout={onLogout} onNavigate={onNavigate} user={user}>
 
       <Header
         title="Current Bill"

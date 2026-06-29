@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AuthPage from './pages/AuthPage';
+import { clearSession, getStoredToken, getStoredUser } from './api';
 import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
 import ItemRequestPage from './pages/ItemRequestPage';
@@ -40,6 +41,17 @@ const getInitialPage = () => {
 
 function App() {
   const [page, setPage] = useState(getInitialPage);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    if (getStoredToken()) {
+      if (window.location.pathname === '/' || window.location.pathname === '/login') {
+        setPage('billing');
+        window.history.replaceState({}, '', '/billing');
+      }
+    }
+    setUser(getStoredUser());
+  }, []);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -63,38 +75,42 @@ function App() {
     }
   };
 
-  const logout = () => navigateToPage('login');
+  const logout = () => {
+    clearSession();
+    setUser(null);
+    navigateToPage('login');
+  };
 
   if (page === 'dashboard') {
-    return <DashboardPage onLogout={logout} onNavigate={navigateToPage} />;
+    return <DashboardPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
   if (page === 'billing') {
-    return <BillingPage onLogout={logout} onNavigate={navigateToPage} />;
+    return <BillingPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
   if (page === 'inventory') {
-    return <InventoryPage onLogout={logout} onNavigate={navigateToPage} />;
+    return <InventoryPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
   if (page === 'itemRequest') {
-    return <ItemRequestPage onLogout={logout} onNavigate={navigateToPage} />;
+    return <ItemRequestPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
   if (page === 'salesReport') {
-    return <SalesReportPage onLogout={logout} onNavigate={navigateToPage} />;
+    return <SalesReportPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
   if (page === 'users') {
-    return <UsersPage onLogout={logout} onNavigate={navigateToPage} />;
+    return <UsersPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
-  if (page === 'settings') {                                          // ← add this block
-    return <SettingsPage onLogout={logout} onNavigate={navigateToPage} />;
+  if (page === 'settings') {
+    return <SettingsPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
   if (isAppPage(page)) {
-    return <CommonAppPage page={page} onLogout={logout} onNavigate={navigateToPage} />;
+    return <CommonAppPage page={page} onLogout={logout} onNavigate={navigateToPage} user={user} />;
   }
 
   return (
@@ -102,7 +118,10 @@ function App() {
       mode={page}
       onShowLogin={() => navigateToPage('login')}
       onShowRegister={() => setPage('register')}
-      onLogin={() => navigateToPage('billing')}
+      onLogin={() => {
+        setUser(getStoredUser());
+        navigateToPage('billing');
+      }}
     />
   );
 }

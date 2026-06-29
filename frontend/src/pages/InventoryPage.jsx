@@ -23,7 +23,7 @@ const INVENTORY_ITEMS = [
   { id: 13, icon: '🍮', name: 'Egg Tart', category: 'Bake', price: 6.80, unit: 'Pcs', purchased: 110, sold: 99, inStock: 11, status: 'In Stock', lastUpdated: '30 May 2026, 10:05 AM' },
 ];
 
-const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
+const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [formMode, setFormMode] = useState(null);
@@ -55,7 +55,7 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate }) => {
   };
 
   return (
-    <AppLayout activePage="inventory" onLogout={onLogout} onNavigate={onNavigate}>
+    <AppLayout activePage="inventory" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Inventory" onToggleSidebar={onToggleSidebar} />
 
       {formMode ? (

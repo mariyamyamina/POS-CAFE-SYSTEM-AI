@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {icons} from '../constants/icons';
+import { authApi, saveSession, clearSession } from '../api';
 import {
   FaBriefcase,
   FaChartBar,
@@ -131,6 +132,8 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
   const [regErrors,  setRegErrors]  = useState({});
   const [regTouched, setRegTouched] = useState({});
   const [regSubmitted, setRegSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   /* ── Login helpers ── */
   const setLogin = (field) => (e) => {
@@ -150,18 +153,35 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
   const loginErr = (field) =>
     (loginSubmitted || loginTouched[field]) ? loginErrors[field] : '';
 
-  const handleLogin = () => {
-    // Compute fresh errors from current field values
+  const handleLogin = async () => {
     const errs = {};
     Object.entries(loginRules).forEach(([f, fn]) => {
       const e = fn(loginFields[f]);
-      errs[f] = e; // store even if empty so touched gate works
+      errs[f] = e;
     });
     setLoginErrors(errs);
     setLoginTouched({ username: true, password: true });
     setLoginSubmitted(true);
     const hasErrors = Object.values(errs).some(Boolean);
-    if (!hasErrors) onLogin?.();
+    if (hasErrors) {
+      setSubmitError('');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setSubmitError('');
+      const response = await authApi.login({
+        username: loginFields.username,
+        password: loginFields.password,
+      });
+      saveSession(response);
+      onLogin?.();
+    } catch (error) {
+      setSubmitError(error.message || 'Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   /* ── Register helpers ── */
@@ -180,7 +200,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
   const regErr = (field) =>
     (regSubmitted || regTouched[field]) ? regErrors[field] : '';
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const errs = {};
     Object.entries(registerRules).forEach(([f, fn]) => {
       errs[f] = fn(regFields[f], regFields);
@@ -189,7 +209,27 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
     setRegTouched({ fullName: true, username: true, email: true, password: true, confirm: true });
     setRegSubmitted(true);
     const hasErrors = Object.values(errs).some(Boolean);
-    if (!hasErrors) onShowLogin?.();
+    if (hasErrors) {
+      setSubmitError('');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setSubmitError('');
+      const response = await authApi.register({
+        fullName: regFields.fullName,
+        username: regFields.username,
+        email: regFields.email,
+        password: regFields.password,
+      });
+      saveSession(response);
+      onShowLogin?.();
+    } catch (error) {
+      setSubmitError(error.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const showLoginBanner = loginSubmitted && Object.values(loginErrors).some(Boolean);
@@ -220,6 +260,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
           {!isRegister && (
             <>
               {showLoginBanner && <ErrorBanner message="Please fix the errors below before continuing." />}
+              {submitError && <ErrorBanner message={submitError} />}
               <form className="mt-7 space-y-4" onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
                 <FieldInput
                   label="Username" icon={FaUser} placeholder="Enter your username"
@@ -238,8 +279,8 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
                   </label>
                   <button type="button" className="font-semibold text-primary-600">Forgot Password?</button>
                 </div>
-                <button type="submit" className="flex h-10 w-full items-center justify-center gap-3 rounded-[9px] bg-primary-600 text-[14px] font-extrabold text-white shadow-lg shadow-primary-100 transition hover:bg-primary-700">
-                  <FaLock /> Sign In
+                <button type="submit" disabled={isSubmitting} className="flex h-10 w-full items-center justify-center gap-3 rounded-[9px] bg-primary-600 text-[14px] font-extrabold text-white shadow-lg shadow-primary-100 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-70">
+                  <FaLock /> {isSubmitting ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
             </>
@@ -249,6 +290,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
           {isRegister && (
             <>
               {showRegBanner && <ErrorBanner message="Please fix the errors below before continuing." />}
+              {submitError && <ErrorBanner message={submitError} />}
               <form className="mt-5 space-y-2.5" onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
                 <FieldInput compact label="Full Name" icon={FaUser} placeholder="Enter your full name"
                   value={regFields.fullName} onChange={setReg('fullName')} onBlur={blurReg('fullName')}
@@ -274,8 +316,8 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
                     <button type="button" className="font-semibold text-primary-600">Privacy Policy</button>
                   </span>
                 </label>
-                <button type="submit" className="flex h-10 w-full items-center justify-center gap-3 rounded-[9px] bg-primary-600 text-[14px] font-extrabold text-white shadow-lg shadow-primary-100 transition hover:bg-primary-700">
-                  <FaBriefcase /> Create Account
+                <button type="submit" disabled={isSubmitting} className="flex h-10 w-full items-center justify-center gap-3 rounded-[9px] bg-primary-600 text-[14px] font-extrabold text-white shadow-lg shadow-primary-100 transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-70">
+                  <FaBriefcase /> {isSubmitting ? 'Creating account...' : 'Create Account'}
                 </button>
               </form>
             </>
