@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { icons } from '../../constants/icons';
+import Sorting from '../common/Sorting';
 
 const statusStyles = {
   'In Stock': 'border-[#A8EBC4] bg-[#DFF9EA] text-[#00A650]',
@@ -7,31 +8,59 @@ const statusStyles = {
   'Out of Stock': 'border-[#FFB3B3] bg-[#FFF0F0] text-[#F01818]',
 };
 
-const sortHeaders = ['Item Name', 'Category', 'Price', 'Unit', 'Purchased', 'Sold', 'In Stock', 'Status', 'Last Updated'];
+const sortHeaders = [
+  { key: 'name', label: 'Item Name', sortable: true },
+  { key: 'category', label: 'Category', sortable: true },
+  { key: 'price', label: 'Price', sortable: true },
+  { key: 'unit', label: 'Unit', sortable: true },
+  { key: 'purchased', label: 'Purchased', sortable: true },
+  { key: 'sold', label: 'Sold', sortable: true },
+  { key: 'inStock', label: 'In Stock', sortable: true },
+  { key: 'status', label: 'Status', sortable: true },
+  { key: 'lastUpdated', label: 'Last Updated', sortable: true },
+];
 
 const InventoryTable = ({ items, onEditItem }) => {
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+
+  const sortedItems = useMemo(() => {
+    const source = [...(items || [])];
+    const { key, direction } = sortConfig;
+
+    if (!key) {
+      return source;
+    }
+
+    source.sort((a, b) => {
+      const left = a[key];
+      const right = b[key];
+
+      if (typeof left === 'number' && typeof right === 'number') {
+        return direction === 'asc' ? left - right : right - left;
+      }
+
+      const leftValue = String(left ?? '').toLowerCase();
+      const rightValue = String(right ?? '').toLowerCase();
+      if (leftValue < rightValue) return direction === 'asc' ? -1 : 1;
+      if (leftValue > rightValue) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return source;
+  }, [items, sortConfig]);
+
   return (
     <div className="overflow-hidden rounded-lg border border-[#EAECF3] bg-white shadow-[0_2px_8px_rgba(20,18,56,0.04)]">
       <div className="overflow-x-auto ">
         <table className="min-w-[1120px] w-full border-collapse text-left">
           <thead>
             <tr className="h-9 bg-[#F9FAFC]">
-              {sortHeaders.map((header) => (
-                <th key={header} className="whitespace-nowrap px-5 text-[11px] font-bold text-black">
-                  <span className="inline-flex items-center gap-1">
-                    {header}
-                    <span className="flex flex-col text-[#B8BECC]">
-                      <icons.chevronDown className="h-2.5 w-2.5 rotate-180" />
-                      <icons.chevronDown className="-mt-1.5 h-2.5 w-2.5" />
-                    </span>
-                  </span>
-                </th>
-              ))}
+              <Sorting columns={sortHeaders} sortConfig={sortConfig} onSortChange={setSortConfig} />
               <th className="whitespace-nowrap px-5 text-[11px] font-bold text-black">Action</th>
             </tr>
           </thead>
           <tbody>
-            {items.map((item) => {
+            {sortedItems.map((item) => {
               const stockTone = item.inStock === 0 ? 'text-[#FF0000]' : item.inStock <= 10 ? 'text-[#FF5C00]' : 'text-[#00A650]';
 
               return (

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { icons } from '../../constants/icons';
+import Sorting from '../common/Sorting';
 
 const statusStyles = {
   'Active': 'bg-[#D1FAE5] text-[#059669]',
@@ -26,27 +27,45 @@ const sortableHeaders = [
 ];
 
 const UsersTable = ({ items, onEditUser }) => {
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+
+  const sortedItems = useMemo(() => {
+    const source = [...(items || [])];
+    const { key, direction } = sortConfig;
+
+    if (!key) {
+      return source;
+    }
+
+    source.sort((a, b) => {
+      const left = a[key];
+      const right = b[key];
+
+      if (typeof left === 'number' && typeof right === 'number') {
+        return direction === 'asc' ? left - right : right - left;
+      }
+
+      const leftValue = String(left ?? '').toLowerCase();
+      const rightValue = String(right ?? '').toLowerCase();
+      if (leftValue < rightValue) return direction === 'asc' ? -1 : 1;
+      if (leftValue > rightValue) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return source;
+  }, [items, sortConfig]);
+
   return (
     <div className="overflow-x-auto m-3 border border-gray-100">
       <table className="min-w-[1000px] w-full border-collapse text-left">
         <thead>
           <tr className="border-b border-[#EAECF3]">
-            {sortableHeaders.map((header) => (
-              <th
-                key={header.key}
-                className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-[#374151]"
-              >
-                <span className="inline-flex items-center gap-1 cursor-pointer select-none">
-                  {header.label}
-                  {header.sortable && <SortIcon />}
-                </span>
-              </th>
-            ))}
+            <Sorting columns={sortableHeaders} sortConfig={sortConfig} onSortChange={setSortConfig} />
             <th className="px-4 py-3" />
           </tr>
         </thead>
         <tbody>
-          {items.map((item) => (
+          {sortedItems.map((item) => (
             <tr
               key={item.id}
               className="border-b border-[#EAECF3] last:border-b-0 hover:bg-[#FAFAFA] transition-colors"

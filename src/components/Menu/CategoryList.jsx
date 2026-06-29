@@ -2,7 +2,7 @@ import React from 'react';
 import { colors } from '../../constants/colors';
 import { icons } from '../../constants/icons';
 
-const CategoryList = ({ selectedCategory = "All Items", onSelectCategory }) => {
+const CategoryList = ({ selectedCategory = "All Items", onSelectCategory, horizontal = false }) => {
   const categories = [
     { id: 'Beverage', label: 'Beverage', icon: icons.categoryBeverage },
     { id: 'Steamed Bun', label: 'Steamed Bun', icon: icons.categoryBun },
@@ -15,8 +15,37 @@ const CategoryList = ({ selectedCategory = "All Items", onSelectCategory }) => {
     { id: 'All Items', label: 'All Items', icon: icons.gridOn },
   ];
 
+  // ── HORIZONTAL (mobile) ──────────────────────────────────────────
+  if (horizontal) {
+    return (
+      <div className="flex flex-row">
+        {categories.map((cat) => {
+          const Icon = cat.icon;
+          const isActive = selectedCategory === cat.id;
+
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onSelectCategory && onSelectCategory(cat.id)}
+              type="button"
+              className={`flex shrink-0 flex-row items-center gap-1.5 border-b-2 px-3 py-2.5 text-[12px] font-semibold transition-all duration-200 whitespace-nowrap ${
+                isActive
+                  ? 'border-[#6C63FF] text-[#6C63FF]'
+                  : 'border-transparent text-text-600 hover:text-text-900'
+              }`}
+            >
+              <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-[#6C63FF]' : 'text-text-600'}`} />
+              <span>{cat.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // ── VERTICAL (desktop) — your original code unchanged ───────────
   return (
-    <div className="flex h-full flex-col  gap-1">
+    <div className="flex h-full flex-col gap-1">
       {categories.map((cat) => {
         const Icon = cat.icon;
         const isActive = selectedCategory === cat.id;
@@ -25,8 +54,9 @@ const CategoryList = ({ selectedCategory = "All Items", onSelectCategory }) => {
           <button
             key={cat.id}
             onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-            className={`flex h-[45px] w-full items-center gap-3 rounded-md px-3 text-[11px] font-semibold transition-all duration-200 ${isActive ? 'text-white' : 'bg-white text-text-900 hover:bg-text-100'
-              }`}
+            className={`flex h-[45px] w-full items-center gap-3 rounded-md px-3 text-[11px] font-semibold transition-all duration-200 ${
+              isActive ? 'text-white' : 'bg-white text-text-900 hover:bg-text-100'
+            }`}
             style={{
               background: isActive
                 ? `linear-gradient(135deg, ${colors.gradientStart} 0%, ${colors.gradientEnd} 100%)`
