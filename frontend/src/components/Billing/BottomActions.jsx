@@ -17,7 +17,7 @@ const BottomActions = ({
   onRestore,
   onMainMenu,
 }) => {
-  const purple = 'flex flex-col items-center justify-center gap-0.5 bg-[#6C63FF] text-white transition-colors hover:bg-[#5A52E0]';
+  const purple = 'flex flex-col items-center justify-center gap-0.5 bg-primary text-white transition-colors hover:bg-[#5A52E0]';
   const teal   = 'flex flex-col items-center justify-center gap-0.5 bg-[#36AFA6] text-white transition-colors hover:bg-[#2E9990]';
   const orange = 'flex flex-row items-center justify-center gap-1.5 bg-[#FF973E] text-white transition-colors hover:bg-[#F08530]';
 

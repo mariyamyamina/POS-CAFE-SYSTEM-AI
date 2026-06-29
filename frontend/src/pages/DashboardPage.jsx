@@ -6,6 +6,7 @@ import SalesOverviewChart from '../components/Dashboard/SalesOverviewChart';
 import TopSellingItems from '../components/Dashboard/TopSellingItems';
 import RecentTransactions from '../components/Dashboard/RecentTransactions';
 import { icons } from '../constants/icons';
+import { useSettings } from '../context/SettingsContext';
 
 const STAT_CARDS = [
     { icon: 'sales', iconBg: '#F5F3FF', iconColor: '#7C3AED', label: 'Total Sales', value: '6050.93', change: '+0%', trend: 'up' },
@@ -38,6 +39,8 @@ const stockColor = (level) => {
 };
 
 const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
+    const { settings } = useSettings();
+    
     return (
         <AppLayout activePage="dashboard" onLogout={onLogout} onNavigate={onNavigate} user={user}>
             <DashboardHeader onToggleSidebar={onToggleSidebar} user={user} />
@@ -126,7 +129,7 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
                 {/* Footer */}
                 <div className="mt-4 flex flex-col items-center justify-between gap-1 text-[11px] text-text-400 sm:flex-row">
-                    <span>©2026 POS Cafe. All rights reserved.</span>
+                    <span>©2026 {settings.cafe_name}. All rights reserved.</span>
                     <span>
                         Made with <span className="text-red-400">♥</span> for your business
                     </span>

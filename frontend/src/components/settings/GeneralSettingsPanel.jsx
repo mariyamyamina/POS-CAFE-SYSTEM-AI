@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { icons } from '../../constants/icons';
+import { useSettings } from '../../context/SettingsContext';
 
 const TIME_FORMAT_OPTIONS = ['hh:mm A', 'HH:mm'];
 
@@ -9,10 +10,18 @@ const inputCls =
 const selectCls = `${inputCls} appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%237C3AED%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-9`;
 
 const GeneralSettingsPanel = () => {
-  const [cafeName, setCafeName] = useState('POS Cafe');
-  const [timeFormat, setTimeFormat] = useState('hh:mm A');
+  const { settings, loading, updateSettings } = useSettings();
+  const [cafeName, setCafeName] = useState(settings.cafe_name);
+  const [timeFormat, setTimeFormat] = useState(settings.time_format);
   const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(settings.logo);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setCafeName(settings.cafe_name);
+    setTimeFormat(settings.time_format);
+    setLogoPreview(settings.logo);
+  }, [settings]);
 
   const handleLogoChange = (e) => {
     const file = e.target.files?.[0];
@@ -21,9 +30,38 @@ const GeneralSettingsPanel = () => {
     setLogoPreview(URL.createObjectURL(file));
   };
 
-  const handleSave = () => {
-    // Wire this up to your settings API.
-    console.log('Save general settings:', { cafeName, timeFormat, logoFile });
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      let logoData = settings.logo;
+      
+      if (logoFile) {
+        logoData = await fileToBase64(logoFile);
+      }
+
+      await updateSettings({
+        cafe_name: cafeName,
+        time_format: timeFormat,
+        logo: logoData,
+      });
+      
+      setLogoFile(null);
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

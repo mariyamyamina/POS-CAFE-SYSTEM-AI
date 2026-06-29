@@ -3,9 +3,12 @@ import ReactDOM from 'react-dom/client';
 import '@fontsource/inter';
 import './index.css';
 import App from './App';
+import { SettingsProvider } from './context/SettingsContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <App />
+    <SettingsProvider>
+      <App />
+    </SettingsProvider>
   </React.StrictMode>
 );

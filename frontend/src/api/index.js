@@ -30,7 +30,44 @@ const clearSession = () => {
   localStorage.removeItem(USER_STORAGE_KEY);
 };
 
-const request = async (path, { method = 'GET', body, headers = {}, auth = true } = {}) => {
+// ── Token-refresh state ───────────────────────────────────────────────────────
+// Prevents multiple simultaneous refresh calls (only one in-flight at a time).
+let _refreshPromise = null;
+
+const _doRefresh = async () => {
+  const refreshToken = getStoredRefreshToken();
+  if (!refreshToken) throw new Error('No refresh token available');
+
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+
+  if (!response.ok) {
+    // Refresh token itself has expired — force logout
+    clearSession();
+    window.location.href = '/login';
+    throw new Error('Session expired. Please log in again.');
+  }
+
+  const data = await response.json();
+  // Save only the new access token (refresh token stays the same)
+  localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, data.access_token);
+  return data.access_token;
+};
+
+const refreshAccessToken = () => {
+  if (!_refreshPromise) {
+    _refreshPromise = _doRefresh().finally(() => {
+      _refreshPromise = null;
+    });
+  }
+  return _refreshPromise;
+};
+
+// ── Core request function ─────────────────────────────────────────────────────
+const request = async (path, { method = 'GET', body, headers = {}, auth = true, _retry = false } = {}) => {
   const requestHeaders = { ...headers };
 
   if (body && typeof body !== 'string' && !(body instanceof FormData) && !requestHeaders['Content-Type']) {
@@ -49,6 +86,19 @@ const request = async (path, { method = 'GET', body, headers = {}, auth = true }
     headers: requestHeaders,
     body: body && typeof body !== 'string' && !(body instanceof FormData) ? JSON.stringify(body) : body,
   });
+
+  // ── Auto-refresh on 401 ───────────────────────────────────────────────────
+  // If the access token is expired, transparently refresh it and retry once.
+  if (response.status === 401 && auth && !_retry) {
+    try {
+      await refreshAccessToken();
+      // Retry the original request with the new token
+      return request(path, { method, body, headers, auth, _retry: true });
+    } catch {
+      // Refresh failed — clearSession already called inside _doRefresh
+      throw new Error('Session expired. Please log in again.');
+    }
+  }
 
   if (response.status === 204) {
     return null;
@@ -86,6 +136,19 @@ export const rolesApi = {
   createRole: (payload) => request('/auth/roles', { method: 'POST', body: payload }),
   updateRole: (roleId, payload) => request(`/auth/roles/${roleId}`, { method: 'PUT', body: payload }),
   deleteRole: (roleId) => request(`/auth/roles/${roleId}`, { method: 'DELETE' }),
+};
+
+export const settingsApi = {
+  getSettings: () => request('/settings'),
+  updateSettings: (payload) => request('/settings', { method: 'PUT', body: payload }),
+};
+
+export const categoriesApi = {
+  getCategories: () => request('/categories'),
+  getCategory: (categoryId) => request(`/categories/${categoryId}`),
+  createCategory: (payload) => request('/categories', { method: 'POST', body: payload }),
+  updateCategory: (categoryId, payload) => request(`/categories/${categoryId}`, { method: 'PUT', body: payload }),
+  deleteCategory: (categoryId) => request(`/categories/${categoryId}`, { method: 'DELETE' }),
 };
 
 export { API_BASE_URL, getStoredToken, getStoredRefreshToken, getStoredUser, saveSession, clearSession, request };

@@ -1,11 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSettings } from '../../context/SettingsContext';
 
 const InventorySettingsPanel = () => {
-  const [threshold, setThreshold] = useState(10);
+  const { settings, updateSettings } = useSettings();
+  const [threshold, setThreshold] = useState(settings.low_stock_threshold);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    // Wire this up to your settings API.
-    console.log('Save inventory settings:', { lowStockThreshold: threshold });
+  useEffect(() => {
+    setThreshold(settings.low_stock_threshold);
+  }, [settings.low_stock_threshold]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await updateSettings({
+        low_stock_threshold: parseInt(threshold, 10),
+      });
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

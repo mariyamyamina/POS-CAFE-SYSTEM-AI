@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {icons} from '../constants/icons';
 import { authApi, saveSession, clearSession } from '../api';
+import { useSettings } from '../context/SettingsContext';
 import {
   FaBriefcase,
   FaChartBar,
@@ -73,33 +74,43 @@ const FieldInput = ({ label, icon: Icon, placeholder, type = 'text', compact = f
 };
 
 /* ─── Brand panel ──────────────────────────────────────────────────── */
-const BrandPanel = () => (
-  <aside className="relative hidden min-h-screen overflow-hidden bg-[#090033] text-white lg:block lg:w-1/2">
-    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1300&q=90')" }} />
-    <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,0,45,0.98)_0%,rgba(19,0,90,0.84)_43%,rgba(19,0,90,0.22)_100%)]" />
-    <div className="relative z-10 flex min-h-screen max-w-[430px] flex-col justify-center px-14 py-10">
-      <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-3xl shadow-2xl shadow-primary-900/40"><icons.logo /></div>
-      <h1 className="text-[34px] font-extrabold leading-none">POS Cafe</h1>
-      <p className="mt-4 text-[17px] font-medium text-indigo-100/80">Point of Sale System</p>
-      <div className="mt-6 h-1 w-[68px] rounded-full bg-primary-500" />
-      <div className="mt-7">
-        <h2 className="text-[16px] font-extrabold">Smart Billing. Happy Business.</h2>
-        <p className="mt-4 max-w-[250px] text-[13px] leading-5 text-indigo-100/75">All-in-one POS solution to streamline your cafe operations.</p>
-      </div>
-      <div className="mt-9 space-y-6">
-        {features.map(({ icon: Icon, title, description }) => (
-          <div className="flex items-center gap-4" key={title}>
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/18 text-[16px] text-white"><Icon /></div>
-            <div>
-              <h3 className="text-[13px] font-extrabold">{title}</h3>
-              <p className="mt-1 text-[13px] font-semibold text-white">{description}</p>
+const BrandPanel = () => {
+  const { settings } = useSettings();
+  
+  return (
+    <aside className="relative hidden min-h-screen overflow-hidden bg-[#090033] text-white lg:block lg:w-1/2">
+      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1300&q=90')" }} />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,0,45,0.98)_0%,rgba(19,0,90,0.84)_43%,rgba(19,0,90,0.22)_100%)]" />
+      <div className="relative z-10 flex min-h-screen max-w-[430px] flex-col justify-center px-14 py-10">
+        <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-3xl shadow-2xl shadow-primary-900/40 overflow-hidden">
+          {settings.logo ? (
+            <img src={settings.logo} alt="Logo" className="h-full w-full object-cover" />
+          ) : (
+            <icons.logo />
+          )}
+        </div>
+        <h1 className="text-[34px] font-extrabold leading-none">{settings.cafe_name}</h1>
+        <p className="mt-4 text-[17px] font-medium text-indigo-100/80">Point of Sale System</p>
+        <div className="mt-6 h-1 w-[68px] rounded-full bg-primary-500" />
+        <div className="mt-7">
+          <h2 className="text-[16px] font-extrabold">Smart Billing. Happy Business.</h2>
+          <p className="mt-4 max-w-[250px] text-[13px] leading-5 text-indigo-100/75">All-in-one POS solution to streamline your cafe operations.</p>
+        </div>
+        <div className="mt-9 space-y-6">
+          {features.map(({ icon: Icon, title, description }) => (
+            <div className="flex items-center gap-4" key={title}>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/18 text-[16px] text-white"><Icon /></div>
+              <div>
+                <h3 className="text-[13px] font-extrabold">{title}</h3>
+                <p className="mt-1 text-[13px] font-semibold text-white">{description}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  </aside>
-);
+    </aside>
+  );
+};
 
 const DotPattern = () => (
   <div className="absolute right-7 top-6 grid grid-cols-4 gap-2">

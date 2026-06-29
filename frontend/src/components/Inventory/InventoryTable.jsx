@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { icons } from '../../constants/icons';
 import Sorting from '../common/Sorting';
+import { useSettings } from '../../context/SettingsContext';
 
 const statusStyles = {
   'In Stock': 'border-[#A8EBC4] bg-[#DFF9EA] text-[#00A650]',
@@ -21,6 +22,7 @@ const sortHeaders = [
 ];
 
 const InventoryTable = ({ items, onEditItem }) => {
+  const { settings } = useSettings();
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
 
   const sortedItems = useMemo(() => {
@@ -61,7 +63,7 @@ const InventoryTable = ({ items, onEditItem }) => {
           </thead>
           <tbody>
             {sortedItems.map((item) => {
-              const stockTone = item.inStock === 0 ? 'text-[#FF0000]' : item.inStock <= 10 ? 'text-[#FF5C00]' : 'text-[#00A650]';
+              const stockTone = item.inStock === 0 ? 'text-[#FF0000]' : item.inStock <= settings.low_stock_threshold ? 'text-[#FF5C00]' : 'text-[#00A650]';
 
               return (
                 <tr key={item.id} className="h-[49px] border-t border-[#EEF0F5] bg-white text-[12px] font-semibold text-[#10112B]">

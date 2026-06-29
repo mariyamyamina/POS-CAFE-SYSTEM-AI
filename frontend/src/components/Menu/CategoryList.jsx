@@ -1,19 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { colors } from '../../constants/colors';
 import { icons } from '../../constants/icons';
+import { categoriesApi } from '../../api';
 
 const CategoryList = ({ selectedCategory = "All Items", onSelectCategory, horizontal = false }) => {
-  const categories = [
-    { id: 'Beverage', label: 'Beverage', icon: icons.categoryBeverage },
-    { id: 'Steamed Bun', label: 'Steamed Bun', icon: icons.categoryBun },
-    { id: 'Streamed Timsum', label: 'Streamed Timsum', icon: icons.categoryTimsum },
-    { id: 'Deep Fry Timsum', label: 'Deep Fry Timsum', icon: icons.categoryFry },
-    { id: 'Bake', label: 'Bake', icon: icons.categoryBake },
-    { id: 'Noodle/Dumplings', label: 'Noodle/ Dumplings', icon: icons.categoryNoodle },
-    { id: 'Porridge', label: 'Porridge', icon: icons.categoryPorridge },
-    { id: 'Fresh Juice', label: 'Fresh Juice', icon: icons.categoryJuice },
-    { id: 'All Items', label: 'All Items', icon: icons.gridOn },
-  ];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const data = await categoriesApi.getCategories();
+      // Map icon names to actual icon components
+      const categoriesWithIcons = data.map(cat => ({
+        id: cat.name,
+        label: cat.name,
+        icon: icons[cat.icon] || icons.category, // Fallback to default icon
+      }));
+      setCategories([
+        ...categoriesWithIcons,
+        { id: 'All Items', label: 'All Items', icon: icons.gridOn },
+      ]);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+      // Fallback to hardcoded categories if API fails
+      setCategories([
+        { id: 'Beverage', label: 'Beverage', icon: icons.categoryBeverage },
+        { id: 'Steamed Bun', label: 'Steamed Bun', icon: icons.categoryBun },
+        { id: 'Streamed Timsum', label: 'Streamed Timsum', icon: icons.categoryTimsum },
+        { id: 'Deep Fry Timsum', label: 'Deep Fry Timsum', icon: icons.categoryFry },
+        { id: 'Bake', label: 'Bake', icon: icons.categoryBake },
+        { id: 'Noodle/Dumplings', label: 'Noodle/ Dumplings', icon: icons.categoryNoodle },
+        { id: 'Porridge', label: 'Porridge', icon: icons.categoryPorridge },
+        { id: 'Fresh Juice', label: 'Fresh Juice', icon: icons.categoryJuice },
+        { id: 'All Items', label: 'All Items', icon: icons.gridOn },
+      ]);
+    }
+  };
 
   // ── HORIZONTAL (mobile) ──────────────────────────────────────────
   if (horizontal) {

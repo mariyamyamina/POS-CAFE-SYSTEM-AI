@@ -1,31 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { icons } from '../../constants/icons';
+import { categoriesApi } from '../../api';
 
-const INITIAL_CATEGORIES = [
-  { id: 1, name: 'Beverage' },
-  { id: 2, name: 'Steamed Bun' },
-  { id: 3, name: 'Streamed Timsum' },
-  { id: 4, name: 'Deep Fry Timsum' },
-  { id: 5, name: 'Bake' },
-  { id: 6, name: 'Noodle/ Dumplings' },
-  { id: 7, name: 'Porridge' },
-  { id: 8, name: 'Fresh Juice' },
-  { id: 9, name: 'All Items' },
-];
+const DEFAULT_ICONS = ['categoryBeverage', 'categoryBun', 'categoryTimsum', 'categoryFry', 'categoryBake', 'categoryNoodle', 'categoryPorridge', 'categoryJuice'];
 
 const MenuManagementSettingsPanel = () => {
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState([]);
   const [newCategory, setNewCategory] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editingValue, setEditingValue] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleAdd = () => {
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      const data = await categoriesApi.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdd = async () => {
     const name = newCategory.trim();
     if (!name) return;
-    setCategories((prev) => [...prev, { id: Date.now(), name }]);
-    setNewCategory('');
-    // Wire this up to your category-create API.
-    console.log('Add category:', name);
+    
+    try {
+      // Assign a default icon based on the order
+      const iconIndex = categories.length % DEFAULT_ICONS.length;
+      const defaultIcon = DEFAULT_ICONS[iconIndex];
+      
+      const newCat = await categoriesApi.createCategory({
+        name,
+        icon: defaultIcon,
+      });
+      
+      setCategories((prev) => [newCat, ...prev]);
+      setNewCategory('');
+    } catch (error) {
+      console.error('Failed to add category:', error);
+      alert('Failed to add category. Please try again.');
+    }
   };
 
   const startEdit = (category) => {
@@ -33,22 +54,31 @@ const MenuManagementSettingsPanel = () => {
     setEditingValue(category.name);
   };
 
-  const confirmEdit = () => {
+  const confirmEdit = async () => {
     const name = editingValue.trim();
     if (!name) return;
-    setCategories((prev) =>
-      prev.map((c) => (c.id === editingId ? { ...c, name } : c))
-    );
-    // Wire this up to your category-update API.
-    console.log('Update category:', editingId, name);
-    setEditingId(null);
-    setEditingValue('');
+    
+    try {
+      const updated = await categoriesApi.updateCategory(editingId, { name });
+      setCategories((prev) =>
+        prev.map((c) => (c.id === editingId ? updated : c))
+      );
+      setEditingId(null);
+      setEditingValue('');
+    } catch (error) {
+      console.error('Failed to update category:', error);
+      alert('Failed to update category. Please try again.');
+    }
   };
 
-  const handleDelete = (category) => {
-    setCategories((prev) => prev.filter((c) => c.id !== category.id));
-    // Wire this up to your category-delete API.
-    console.log('Delete category:', category);
+  const handleDelete = async (category) => {
+    try {
+      await categoriesApi.deleteCategory(category.id);
+      setCategories((prev) => prev.filter((c) => c.id !== category.id));
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+      alert('Failed to delete category. Please try again.');
+    }
   };
 
   return (

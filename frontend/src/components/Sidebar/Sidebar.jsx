@@ -1,8 +1,11 @@
 import React from 'react';
 import { colors } from '../../constants/colors';
 import { icons } from '../../constants/icons';
+import { useSettings } from '../../context/SettingsContext';
 
 const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate, user }) => {
+  const { settings } = useSettings();
+  
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: icons.dashboard },
     { id: 'billing', label: 'Billing', icon: icons.billing },
@@ -29,10 +32,14 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate
       >
         <div className="flex flex-col items-center justify-center px-5 pb-3 pt-5">
           <div className="flex flex-col items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/25">
-              <icons.logo className="h-6 w-6 text-white" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-lg shadow-primary/25 overflow-hidden">
+              {settings.logo ? (
+                <img src={settings.logo} alt="Logo" className="h-full w-full object-cover" />
+              ) : (
+                <icons.logo className="h-6 w-6 text-white" />
+              )}
             </div>
-            <h1 className="text-lg font-bold tracking-tight text-white">POS Cafe</h1>
+            <h1 className="text-lg font-bold tracking-tight text-white">{settings.cafe_name}</h1>
           </div>
         </div>
 
