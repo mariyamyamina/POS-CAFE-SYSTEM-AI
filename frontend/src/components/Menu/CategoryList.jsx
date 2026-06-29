@@ -14,11 +14,14 @@ const CategoryList = ({ selectedCategory = "All Items", onSelectCategory, horizo
     try {
       const data = await categoriesApi.getCategories();
       // Map icon names to actual icon components
-      const categoriesWithIcons = data.map(cat => ({
-        id: cat.name,
-        label: cat.name,
-        icon: icons[cat.icon] || icons.category, // Fallback to default icon
-      }));
+      // Filter out any "All Items" entry from the API so we don't duplicate it below
+      const categoriesWithIcons = data
+        .filter(cat => cat.name !== 'All Items')
+        .map(cat => ({
+          id: cat.name,
+          label: cat.name,
+          icon: icons[cat.icon] || icons.category, // Fallback to default icon
+        }));
       setCategories([
         ...categoriesWithIcons,
         { id: 'All Items', label: 'All Items', icon: icons.gridOn },
