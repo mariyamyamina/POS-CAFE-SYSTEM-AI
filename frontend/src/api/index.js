@@ -81,5 +81,12 @@ export const authApi = {
   deleteUser: (userId) => request(`/auth/users/${userId}`, { method: 'DELETE' }),
 };
 
+export const rolesApi = {
+  getRoles: () => request('/auth/roles'),
+  createRole: (payload) => request('/auth/roles', { method: 'POST', body: payload }),
+  updateRole: (roleId, payload) => request(`/auth/roles/${roleId}`, { method: 'PUT', body: payload }),
+  deleteRole: (roleId) => request(`/auth/roles/${roleId}`, { method: 'DELETE' }),
+};
+
 export { API_BASE_URL, getStoredToken, getStoredRefreshToken, getStoredUser, saveSession, clearSession, request };
 export default request;

@@ -38,6 +38,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [pageSize, setPageSize] = useState(5);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeFilters, setActiveFilters] = useState({ search: '', role: 'all', status: 'all' });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -61,15 +62,35 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [modalMode, setModalMode] = useState('add');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const totalPages = Math.ceil(users.length / pageSize);
+  const filteredUsers = useMemo(() => {
+    const { search, role, status } = activeFilters;
+    return users.filter((u) => {
+      const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
+      const matchesSearch =
+        !search ||
+        fullName.includes(search.toLowerCase()) ||
+        u.username.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase());
+      const matchesRole = role === 'all' || u.role === role;
+      const matchesStatus = status === 'all' || u.status === status;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, activeFilters]);
+
+  const totalPages = Math.ceil(filteredUsers.length / pageSize);
   const visibleItems = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return users.slice(start, start + pageSize);
-  }, [page, pageSize, users]);
+    return filteredUsers.slice(start, start + pageSize);
+  }, [page, pageSize, filteredUsers]);
 
   const handlePageSizeChange = (nextPageSize) => {
     setPageSize(nextPageSize);
     setPage(1);
+  };
+
+  const handleFilter = (filters) => {
+    setActiveFilters(filters);
+    setPage(1); // reset to first page on filter
   };
 
   // Clicking the edit (pencil) icon in a table row opens the modal in
@@ -148,7 +169,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
       <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-4">
         <div className="flex min-h-full flex-col gap-3">
-          <UsersFilterBar />
+          <UsersFilterBar onFilter={handleFilter} />
 
           <section className="rounded-lg border border-[#EAECF3] bg-white shadow-[0_2px_8px_rgba(20,18,56,0.04)]">
             {/* Header row */}
@@ -156,7 +177,9 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
               <div>
                 <h2 className="text-[16px] font-bold text-[#111827]">Users List</h2>
                 <p className="mt-0.5 text-[12px] font-medium text-[#7C3AED]">
-                  Total {users.length} users
+                  {filteredUsers.length === users.length
+                    ? `Total ${users.length} users`
+                    : `Showing ${filteredUsers.length} of ${users.length} users`}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -190,7 +213,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
               page={page}
               totalPages={totalPages}
               pageSize={pageSize}
-              totalItems={users.length}
+              totalItems={filteredUsers.length}
               onPageChange={setPage}
               onPageSizeChange={handlePageSizeChange}
             />

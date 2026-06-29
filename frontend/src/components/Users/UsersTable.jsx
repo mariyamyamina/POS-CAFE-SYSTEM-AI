@@ -56,12 +56,12 @@ const UsersTable = ({ items, onEditUser }) => {
   }, [items, sortConfig]);
 
   return (
-    <div className="overflow-x-auto m-3 border border-gray-100">
+    <div className="overflow-x-auto m-3 border border-gray-100 ">
       <table className="min-w-[1000px] w-full border-collapse text-left">
         <thead>
-          <tr className="border-b border-[#EAECF3]">
+          <tr className="border-b border-[#EAECF3] py-4">
             <Sorting columns={sortableHeaders} sortConfig={sortConfig} onSortChange={setSortConfig} />
-            <th className="px-4 py-3" />
+            <th className="px-4 py-6" />
           </tr>
         </thead>
         <tbody>

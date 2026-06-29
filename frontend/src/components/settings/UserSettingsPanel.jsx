@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { icons } from '../../constants/icons';
 
+import { rolesApi } from '../../api';
+
 const PAGE_PERMISSIONS = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'billing', label: 'Billing' },
@@ -11,34 +13,8 @@ const PAGE_PERMISSIONS = [
   { key: 'settings', label: 'Settings' },
 ];
 
-const allTrue = () =>
-  PAGE_PERMISSIONS.reduce((acc, p) => ({ ...acc, [p.key]: true }), {});
 const allFalse = () =>
   PAGE_PERMISSIONS.reduce((acc, p) => ({ ...acc, [p.key]: false }), {});
-
-const INITIAL_ROLES = [
-  { id: 1, name: 'admin', permissions: allTrue() },
-  {
-    id: 2,
-    name: 'manager',
-    permissions: { dashboard: true, billing: true, inventory: true, itemRequest: true, salesReport: true, users: false, settings: false },
-  },
-  {
-    id: 3,
-    name: 'cashier',
-    permissions: { dashboard: true, billing: true, inventory: false, itemRequest: false, salesReport: true, users: false, settings: false },
-  },
-  {
-    id: 4,
-    name: 'supervisor',
-    permissions: { dashboard: true, billing: false, inventory: true, itemRequest: true, salesReport: false, users: false, settings: false },
-  },
-  {
-    id: 5,
-    name: 'Accountant',
-    permissions: { dashboard: false, billing: false, inventory: false, itemRequest: false, salesReport: true, users: false, settings: false },
-  },
-];
 
 const Checkbox = ({ checked, onChange, label }) => (
   <label className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#374151]">
@@ -53,8 +29,28 @@ const Checkbox = ({ checked, onChange, label }) => (
 );
 
 const UserSettingsPanel = () => {
-  const [roles, setRoles] = useState(INITIAL_ROLES);
+  const [roles, setRoles] = useState([]);
   const [newRoleName, setNewRoleName] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const [editingRoleId, setEditingRoleId] = useState(null);
+  const [editingRoleName, setEditingRoleName] = useState('');
+
+  React.useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  const fetchRoles = async () => {
+    try {
+      setLoading(true);
+      const data = await rolesApi.getRoles();
+      setRoles(data);
+    } catch (error) {
+      console.error('Failed to fetch roles:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const togglePermission = (roleId, key) => {
     setRoles((prev) =>
@@ -66,24 +62,49 @@ const UserSettingsPanel = () => {
     );
   };
 
-  const handleAddRole = () => {
+  const handleAddRole = async () => {
     const name = newRoleName.trim();
     if (!name) return;
-    setRoles((prev) => [...prev, { id: Date.now(), name, permissions: allFalse() }]);
-    setNewRoleName('');
-    // Wire this up to your role-create API.
-    console.log('Add role:', name);
+    try {
+      const newRole = await rolesApi.createRole({ name, permissions: allFalse() });
+      setRoles((prev) => [...prev, newRole]);
+      setNewRoleName('');
+    } catch (error) {
+      console.error('Failed to add role:', error);
+      alert(error.message || 'Failed to add role');
+    }
   };
 
-  const handleSaveRole = (role) => {
-    // Wire this up to your role-update API.
-    console.log('Save role:', role);
+  const handleSaveRole = async (role) => {
+    try {
+      const nameToSave = editingRoleId === role.id ? editingRoleName : role.name;
+      await rolesApi.updateRole(role.id, { name: nameToSave, permissions: role.permissions });
+      
+      // Update local state to reflect the saved name
+      setRoles((prev) =>
+        prev.map((r) => (r.id === role.id ? { ...r, name: nameToSave } : r))
+      );
+      
+      if (editingRoleId === role.id) {
+        setEditingRoleId(null);
+      }
+      
+      alert('Role saved successfully');
+    } catch (error) {
+      console.error('Failed to save role:', error);
+      alert(error.message || 'Failed to save role');
+    }
   };
 
-  const handleDeleteRole = (role) => {
-    setRoles((prev) => prev.filter((r) => r.id !== role.id));
-    // Wire this up to your role-delete API.
-    console.log('Delete role:', role);
+  const handleDeleteRole = async (role) => {
+    if (!window.confirm(`Are you sure you want to delete the role "${role.name}"?`)) return;
+    try {
+      await rolesApi.deleteRole(role.id);
+      setRoles((prev) => prev.filter((r) => r.id !== role.id));
+    } catch (error) {
+      console.error('Failed to delete role:', error);
+      alert(error.message || 'Failed to delete role');
+    }
   };
 
   return (
@@ -122,10 +143,31 @@ const UserSettingsPanel = () => {
             </tr>
           </thead>
           <tbody>
-            {roles.map((role) => (
+            {loading ? (
+              <tr>
+                <td colSpan={PAGE_PERMISSIONS.length + 2} className="px-4 py-8 text-center text-[13px] text-gray-500">
+                  Loading roles...
+                </td>
+              </tr>
+            ) : (
+              roles.map((role) => (
               <tr key={role.id} className="border-t border-[#EAECF3]">
                 <td className="whitespace-nowrap px-4 py-3 text-[13px] font-medium text-[#374151]">
-                  {role.name}
+                  {editingRoleId === role.id ? (
+                    <input
+                      type="text"
+                      value={editingRoleName}
+                      onChange={(e) => setEditingRoleName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveRole(role);
+                        if (e.key === 'Escape') setEditingRoleId(null);
+                      }}
+                      autoFocus
+                      className="h-8 w-[120px] rounded-md border border-[#7C3AED] bg-white px-2 outline-none"
+                    />
+                  ) : (
+                    role.name
+                  )}
                 </td>
                 {PAGE_PERMISSIONS.map((perm) => (
                   <td key={perm.key} className="whitespace-nowrap px-3 py-3">
@@ -145,13 +187,28 @@ const UserSettingsPanel = () => {
                     >
                       Save
                     </button>
-                    <button
-                      type="button"
-                      aria-label={`Edit ${role.name}`}
-                      className="text-[#7C3AED] transition hover:text-[#6D28D9]"
-                    >
-                      <icons.edit className="h-4 w-4" />
-                    </button>
+                    {editingRoleId === role.id ? (
+                      <button
+                        type="button"
+                        aria-label="Cancel editing"
+                        onClick={() => setEditingRoleId(null)}
+                        className="text-[#9CA3AF] transition hover:text-[#374151]"
+                      >
+                        <icons.close className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label={`Edit ${role.name}`}
+                        onClick={() => {
+                          setEditingRoleId(role.id);
+                          setEditingRoleName(role.name);
+                        }}
+                        className="text-[#7C3AED] transition hover:text-[#6D28D9]"
+                      >
+                        <icons.edit className="h-4 w-4" />
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleDeleteRole(role)}
@@ -163,7 +220,7 @@ const UserSettingsPanel = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+            )))}
           </tbody>
         </table>
       </div>

@@ -29,7 +29,7 @@ from app.schemas.auth import (
     UserOut,
     UpdateUserRequest,
 )
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_admin
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -121,7 +121,7 @@ def get_users(current_user: User = Depends(get_current_user), db: Session = Depe
 
 
 @router.post("/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_new_user(payload: AdminCreateUserRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_new_user(payload: AdminCreateUserRequest, current_user: User = Depends(require_admin), db: Session = Depends(get_db)):
     if get_user_by_username(db, payload.username):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username is already taken")
     if get_user_by_email(db, payload.email):
@@ -141,7 +141,7 @@ def create_new_user(payload: AdminCreateUserRequest, current_user: User = Depend
 
 
 @router.put("/users/{user_id}", response_model=UserOut)
-def update_existing_user(user_id: int, payload: UpdateUserRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_existing_user(user_id: int, payload: UpdateUserRequest, current_user: User = Depends(require_admin), db: Session = Depends(get_db)):
     # Check if username is taken by another user
     if payload.username:
         existing_user = get_user_by_username(db, payload.username)
@@ -169,7 +169,7 @@ def update_existing_user(user_id: int, payload: UpdateUserRequest, current_user:
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_existing_user(user_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_existing_user(user_id: int, current_user: User = Depends(require_admin), db: Session = Depends(get_db)):
     # Prevent deleting the current user
     if current_user.id == user_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete your own account")

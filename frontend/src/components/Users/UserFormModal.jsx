@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
-const ROLE_OPTIONS = ['Cashier', 'Manager', 'Supervisor', 'Accountant'];
+import { rolesApi } from '../../api';
 
 const emptyForm = {
   firstName: '',
@@ -37,6 +36,15 @@ const UserFormModal = ({ isOpen, mode = 'add', user = null, onClose, onSave, onD
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState(emptyErrors);
   const [touched, setTouched] = useState({});
+  const [roleOptions, setRoleOptions] = useState([]);
+
+  // Fetch roles
+  useEffect(() => {
+    if (!isOpen) return;
+    rolesApi.getRoles().then(roles => {
+      setRoleOptions(roles.map(r => r.name));
+    }).catch(console.error);
+  }, [isOpen]);
 
   // Populate the form whenever the modal opens — empty for "add",
   // pre-filled with the selected user's data for "edit".
@@ -247,7 +255,7 @@ const UserFormModal = ({ isOpen, mode = 'add', user = null, onClose, onSave, onD
               onChange={updateField('role')}
               className={`${inputCls(false)} appearance-none bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%237C3AED%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-9`}
             >
-              {ROLE_OPTIONS.map((role) => (
+              {roleOptions.map((role) => (
                 <option key={role} value={role}>{role}</option>
               ))}
             </select>

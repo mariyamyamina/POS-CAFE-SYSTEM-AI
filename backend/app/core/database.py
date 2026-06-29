@@ -21,7 +21,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base.metadata.create_all(bind=engine)
 
-from app.models import user  # noqa: F401
+from app import models  # noqa: F401
 
 
 def get_db():

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, func, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app.core.database import Base
 
@@ -12,9 +13,14 @@ class User(Base):
     email = Column(String(255), unique=True, index=True, nullable=False)
     hashed_password = Column("hashed_password", String(255), nullable=False)
 
-    role = Column(String(50), nullable=False, default="Cashier")
+    role = Column(String(50), ForeignKey("roles.name"), nullable=False, default="Cashier")
+    role_data = relationship("Role", foreign_keys=[role])
     is_active = Column(Boolean, nullable=False, default=True)
     phone = Column(String(20), nullable=True)
+
+    @property
+    def permissions(self):
+        return self.role_data.permissions if self.role_data else {}
 
     # Stores the latest refresh token so /auth/refresh and /auth/logout
     # can invalidate it server-side instead of trusting a stateless JWT forever.

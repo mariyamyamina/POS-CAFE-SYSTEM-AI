@@ -38,7 +38,12 @@ const Sidebar = ({ activePage = 'billing', isOpen, onClose, onLogout, onNavigate
 
         <nav className="flex-1 overflow-y-auto px-3 py-2 scrollbar-none">
           <ul className="space-y-1">
-            {navItems.map((item) => {
+            {navItems
+              .filter((item) => {
+                if (user?.role === 'Admin') return true;
+                return user?.permissions?.[item.id] === true;
+              })
+              .map((item) => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
 

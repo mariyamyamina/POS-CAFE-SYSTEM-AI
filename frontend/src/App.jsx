@@ -46,8 +46,8 @@ function App() {
   useEffect(() => {
     if (getStoredToken()) {
       if (window.location.pathname === '/' || window.location.pathname === '/login') {
-        setPage('billing');
-        window.history.replaceState({}, '', '/billing');
+        setPage('dashboard');
+        window.history.replaceState({}, '', '/dashboard');
       }
     }
     setUser(getStoredUser());
@@ -81,33 +81,66 @@ function App() {
     navigateToPage('login');
   };
 
-  if (page === 'dashboard') {
-    return <DashboardPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
-  }
+  const renderProtectedPage = (pageName, Component) => {
+    // If there is no user data, session might be invalid
+    if (!user) {
+      return (
+        <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-gray-50">
+          <h2 className="text-2xl font-bold text-gray-800">Session Expired</h2>
+          <p className="text-gray-500">Please log in again.</p>
+          <button
+            type="button"
+            onClick={logout}
+            className="rounded-md bg-[#7C3AED] px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-[#6D28D9]"
+          >
+            Go to Login
+          </button>
+        </div>
+      );
+    }
 
-  if (page === 'billing') {
-    return <BillingPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
-  }
+    // Admins have access to everything
+    if (user?.role === 'Admin') {
+      return <Component onLogout={logout} onNavigate={navigateToPage} user={user} />;
+    }
 
-  if (page === 'inventory') {
-    return <InventoryPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
-  }
+    // Check specific page permission
+    if (user && user.permissions && user.permissions[pageName] === true) {
+      return <Component onLogout={logout} onNavigate={navigateToPage} user={user} />;
+    }
 
-  if (page === 'itemRequest') {
-    return <ItemRequestPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
-  }
+    // Unauthorized state
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-gray-50">
+        <h2 className="text-2xl font-bold text-gray-800">Unauthorized Access</h2>
+        <p className="text-gray-500">You do not have permission to view this page.</p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => navigateToPage('dashboard')}
+            className="rounded-md border border-[#DDE1EC] bg-white px-5 py-2.5 font-semibold text-[#374151] shadow-sm transition hover:bg-gray-50"
+          >
+            Return to Dashboard
+          </button>
+          <button
+            type="button"
+            onClick={logout}
+            className="rounded-md bg-[#EF4444] px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-[#DC2626]"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+    );
+  };
 
-  if (page === 'salesReport') {
-    return <SalesReportPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
-  }
-
-  if (page === 'users') {
-    return <UsersPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
-  }
-
-  if (page === 'settings') {
-    return <SettingsPage onLogout={logout} onNavigate={navigateToPage} user={user} />;
-  }
+  if (page === 'dashboard') return renderProtectedPage('dashboard', DashboardPage);
+  if (page === 'billing') return renderProtectedPage('billing', BillingPage);
+  if (page === 'inventory') return renderProtectedPage('inventory', InventoryPage);
+  if (page === 'itemRequest') return renderProtectedPage('itemRequest', ItemRequestPage);
+  if (page === 'salesReport') return renderProtectedPage('salesReport', SalesReportPage);
+  if (page === 'users') return renderProtectedPage('users', UsersPage);
+  if (page === 'settings') return renderProtectedPage('settings', SettingsPage);
 
   if (isAppPage(page)) {
     return <CommonAppPage page={page} onLogout={logout} onNavigate={navigateToPage} user={user} />;
@@ -120,7 +153,7 @@ function App() {
       onShowRegister={() => setPage('register')}
       onLogin={() => {
         setUser(getStoredUser());
-        navigateToPage('billing');
+        navigateToPage('dashboard');
       }}
     />
   );

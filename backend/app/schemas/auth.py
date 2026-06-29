@@ -33,6 +33,7 @@ class UserOut(BaseModel):
     is_active: bool = Field(alias="isActive")
     phone: str | None = None
     created_at: datetime
+    permissions: dict = {}
 
 
 class TokenPair(BaseModel):
