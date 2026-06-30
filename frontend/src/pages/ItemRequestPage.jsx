@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import AppLayout from '../layout/AppLayout';
 import PageNavbar from '../components/common/PageNavbar';
 import Pagination from '../components/common/Pagination';
@@ -6,44 +6,72 @@ import ItemRequestFilterBar from '../components/ItemRequest/ItemRequestFilterBar
 import ItemRequestTable from '../components/ItemRequest/ItemRequestTable';
 import ItemRequestForm from '../components/ItemRequest/ItemRequestForm';
 import { icons } from '../constants/icons';
+import { itemRequestApi } from '../api';
 
-const REQUESTS = [
-  {
-    id: 4,
-    subject: 'Request for Orange Juice',
-    requestedBy: 'Mariyam Yamina M',
-    requestedDate: '20 June 2026\n10:54 PM',
-    expectingDelivery: '23 June 2026',
-    status: 'On the way',
-  },
-  {
-    id: 3,
-    subject: 'Request for Strawberry Milkshake',
-    requestedBy: 'Mariyam Yamina M',
-    requestedDate: '20 June 2026\n10:53 PM',
-    expectingDelivery: '22 June 2026',
-    status: 'Pending',
-  },
-  {
-    id: 2,
-    subject: 'Request for strawberry Milkshake and\nOrange juice',
-    requestedBy: 'Administrator\nAdmin',
-    requestedDate: '20 June 2026\n10:07 PM',
-    expectingDelivery: '21 June 2026',
-    status: 'Cancelled',
-  },
-];
+const formatDate = (isoDate) => {
+  if (!isoDate) return '—';
+  try {
+    return new Date(isoDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch {
+    return isoDate;
+  }
+};
+
+const formatDateTime = (isoDateTime) => {
+  if (!isoDateTime) return '—';
+  try {
+    return new Date(isoDateTime).toLocaleString('en-GB', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+    });
+  } catch {
+    return isoDateTime;
+  }
+};
 
 const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
   const [formMode, setFormMode] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const totalPages = Math.ceil(REQUESTS.length / pageSize);
+
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await itemRequestApi.getRequests();
+      console.log("API Response:", data);
+console.log("Is Array:", Array.isArray(data));
+      setRequests(data || []);
+    } catch (err) {
+      console.error('Failed to load item requests:', err);
+      setError(err.message || 'Failed to load item requests.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const totalPages = Math.max(1, Math.ceil(requests.length / pageSize));
+
+  // Maps backend ItemRequestResponse shape -> the display shape ItemRequestTable expects
   const visibleRequests = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return REQUESTS.slice(start, start + pageSize);
-  }, [page, pageSize]);
+    return requests.slice(start, start + pageSize).map((r) => ({
+      id: r.id,
+      subject: r.subject,
+      requestedBy: r.requested_by_name || `User #${r.requested_by}`,
+      requestedDate: formatDateTime(r.created_at),
+      expectingDelivery: formatDate(r.expected_delivery),
+      status: r.status,
+    }));
+  }, [requests, page, pageSize]);
 
   const handlePageSizeChange = (nextPageSize) => {
     setPageSize(nextPageSize);
@@ -55,14 +83,22 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     setFormMode('add');
   };
 
-  const handleEditRequest = (request) => {
-    setSelectedRequest(request);
+  const handleEditRequest = (displayItem) => {
+    // ItemRequestTable only has the flattened display row — find the full
+    // raw request object (with items, requested_date, etc.) by id for the form
+    const fullRequest = requests.find((r) => r.id === displayItem.id);
+    setSelectedRequest(fullRequest || null);
     setFormMode('edit');
   };
 
   const handleCloseForm = () => {
     setSelectedRequest(null);
     setFormMode(null);
+  };
+
+  const handleFormSaved = () => {
+    handleCloseForm();
+    fetchRequests();
   };
 
   return (
@@ -74,7 +110,7 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
           mode={formMode}
           request={selectedRequest}
           onCancel={handleCloseForm}
-          onSave={handleCloseForm}
+          onSave={handleFormSaved}
         />
       ) : (
         <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-5">
@@ -85,7 +121,9 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
               <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h2 className="text-[20px] font-bold text-[#050A24]">Item Request List</h2>
-                  <p className="mt-1 text-[12px] font-semibold text-[#6D28D9]">Total 3 requests</p>
+                  <p className="mt-1 text-[12px] font-semibold text-[#6D28D9]">
+                    {loading ? 'Loading…' : `Total ${requests.length} request${requests.length === 1 ? '' : 's'}`}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -103,17 +141,34 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                 </div>
               </div>
 
-              <ItemRequestTable items={visibleRequests} onEditRequest={handleEditRequest} />
+              {error && (
+                <div className="mb-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-[12px] font-medium text-red-600">
+                  {error}
+                  <button onClick={fetchRequests} className="ml-2 font-semibold underline" type="button">Retry</button>
+                </div>
+              )}
 
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                totalItems={REQUESTS.length}
-                pageSizeOptions={[5, 10, 25]}
-                onPageChange={setPage}
-                onPageSizeChange={handlePageSizeChange}
-              />
+              {loading ? (
+                <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">Loading item requests…</div>
+              ) : requests.length === 0 && !error ? (
+                <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">
+                  No item requests yet. Click "New Item Request" to create one.
+                </div>
+              ) : (
+                <>
+                  <ItemRequestTable items={visibleRequests} onEditRequest={handleEditRequest} />
+
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    pageSize={pageSize}
+                    totalItems={requests.length}
+                    pageSizeOptions={[5, 10, 25]}
+                    onPageChange={setPage}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
+                </>
+              )}
             </section>
           </div>
         </main>

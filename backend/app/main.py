@@ -15,6 +15,7 @@ from app.api.sales import router as sales_router
 from app.api.dashboard import router as dashboard_router
 from app.crud.user import get_user_by_username, create_user
 from app.crud.role import get_role_by_name, create_role
+from app.api import item_request
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -74,6 +75,8 @@ app.include_router(categories_router)
 app.include_router(inventory_router)
 app.include_router(sales_router)
 app.include_router(dashboard_router)
+app.include_router(item_request.router, prefix="/api", tags=["Item Request"])
+
 
 # ── Serve uploaded images as static files ─────────────────────────────────────
 # Images are saved to uploads/inventory/<uuid>.ext by the inventory CRUD.

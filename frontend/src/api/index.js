@@ -202,3 +202,27 @@ export const dashboardApi = {
   getDashboardData: () => request('/api/dashboard'),
 };
 
+
+export const itemRequestApi = {
+  getRequests: () => request('/api/item-requests'),
+  getRequest: (requestId) => request(`/api/item-requests/${requestId}`),
+  saveRequest: (payload) =>
+    request('/api/item-requests/save', {
+      method: 'POST',
+      body: payload,
+    }),
+  submitRequest: (payload) =>
+    request('/api/item-requests/submit', {
+      method: 'POST',
+      body: payload,
+    }),
+  updateRequest: (requestId, payload) =>
+    request(`/api/item-requests/${requestId}`, {
+      method: 'PUT',
+      body: payload,
+    }),
+  deleteRequest: (requestId) =>
+    request(`/api/item-requests/${requestId}`, {
+      method: 'DELETE',
+    }),
+};
