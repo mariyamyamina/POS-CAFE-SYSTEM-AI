@@ -31,7 +31,7 @@ def _to_sale_response(hdr) -> dict:
     }
 
 
-@router.post("/sales", response_model=SaleResponse)
+@router.post("/api/sales", response_model=SaleResponse)
 def create_new_sale(
     sale: SaleCreate,
     db: Session = Depends(get_db),
@@ -49,7 +49,7 @@ def create_new_sale(
     return _to_sale_response(hdr)
 
 
-@router.get("/sales/{sale_id}", response_model=SaleResponse)
+@router.get("/api/sales/{sale_id}", response_model=SaleResponse)
 def get_sale_by_id(sale_id: int, db: Session = Depends(get_db)):
     hdr = get_sale(db, sale_id)
     if not hdr:
@@ -57,13 +57,13 @@ def get_sale_by_id(sale_id: int, db: Session = Depends(get_db)):
     return _to_sale_response(hdr)
 
 
-@router.get("/sales", response_model=List[SaleResponse])
+@router.get("/api/sales", response_model=List[SaleResponse])
 def get_all_sales(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     hdrs = get_sales(db, skip=skip, limit=limit)
     return [_to_sale_response(h) for h in hdrs]
 
 
-@router.get("/sales-report", response_model=List[SalesReportRow])
+@router.get("/api/sales-report", response_model=List[SalesReportRow])
 def get_sales_report(
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,

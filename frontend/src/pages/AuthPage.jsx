@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import {icons} from '../constants/icons';
+import { icons } from '../constants/icons';
 import { authApi, saveSession, clearSession } from '../api';
 import { useSettings } from '../context/SettingsContext';
 import {
@@ -16,9 +16,9 @@ import {
 import { FieldError } from '../hooks/useFormValidation';
 
 const features = [
-  { icon: FaReceipt,  title: 'Fast & Easy Billing',  description: 'Create bills in seconds' },
-  { icon: FaStore,    title: 'Inventory Management', description: 'Track stock in real time' },
-  { icon: FaChartBar, title: 'Detailed Reports',     description: 'Insights to grow your business' },
+  { icon: FaReceipt, title: 'Fast & Easy Billing', description: 'Create bills in seconds' },
+  { icon: FaStore, title: 'Inventory Management', description: 'Track stock in real time' },
+  { icon: FaChartBar, title: 'Detailed Reports', description: 'Insights to grow your business' },
 ];
 
 /* ─── Validation rules ─────────────────────────────────────────────── */
@@ -27,11 +27,11 @@ const loginRules = {
   password: (v) => v.length >= 6 ? '' : 'Password must be at least 6 characters.',
 };
 const registerRules = {
-  fullName: (v)      => v.trim() ? '' : 'Full name is required.',
-  username: (v)      => v.trim() ? '' : 'Username is required.',
-  email:    (v)      => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : 'Enter a valid email address.',
-  password: (v)      => v.length >= 6 ? '' : 'Password must be at least 6 characters.',
-  confirm:  (v, all) => v === all?.password ? '' : 'Passwords do not match.',
+  fullName: (v) => v.trim() ? '' : 'Full name is required.',
+  username: (v) => v.trim() ? '' : 'Username is required.',
+  email: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : 'Enter a valid email address.',
+  password: (v) => v.length >= 6 ? '' : 'Password must be at least 6 characters.',
+  confirm: (v, all) => v === all?.password ? '' : 'Passwords do not match.',
 };
 
 /* ─── Error border helper ──────────────────────────────────────────── */
@@ -44,8 +44,8 @@ const errBorder = (show) =>
 const FieldInput = ({ label, icon: Icon, placeholder, type = 'text', compact = false, error, onBlur, onChange, value }) => {
   const [showPwd, setShowPwd] = useState(false);
   const isPassword = type === 'password';
-  const inputType  = isPassword ? (showPwd ? 'text' : 'password') : type;
-  const hasError   = Boolean(error);
+  const inputType = isPassword ? (showPwd ? 'text' : 'password') : type;
+  const hasError = Boolean(error);
 
   return (
     <div>
@@ -76,7 +76,7 @@ const FieldInput = ({ label, icon: Icon, placeholder, type = 'text', compact = f
 /* ─── Brand panel ──────────────────────────────────────────────────── */
 const BrandPanel = () => {
   const { settings } = useSettings();
-  
+
   return (
     <aside className="relative hidden min-h-screen overflow-hidden bg-[#090033] text-white lg:block lg:w-1/2">
       <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1300&q=90')" }} />
@@ -131,16 +131,17 @@ const ErrorBanner = ({ message }) => (
 /* ─── Auth Page ────────────────────────────────────────────────────── */
 const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
   const isRegister = mode === 'register';
+  const { settings } = useSettings();
 
   /* ── Login state ── */
-  const [loginFields,  setLoginFields]  = useState({ username: '', password: '' });
-  const [loginErrors,  setLoginErrors]  = useState({});
+  const [loginFields, setLoginFields] = useState({ username: '', password: '' });
+  const [loginErrors, setLoginErrors] = useState({});
   const [loginTouched, setLoginTouched] = useState({});
   const [loginSubmitted, setLoginSubmitted] = useState(false);
 
   /* ── Register state ── */
-  const [regFields,  setRegFields]  = useState({ fullName: '', username: '', email: '', password: '', confirm: '' });
-  const [regErrors,  setRegErrors]  = useState({});
+  const [regFields, setRegFields] = useState({ fullName: '', username: '', email: '', password: '', confirm: '' });
+  const [regErrors, setRegErrors] = useState({});
   const [regTouched, setRegTouched] = useState({});
   const [regSubmitted, setRegSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -244,7 +245,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
   };
 
   const showLoginBanner = loginSubmitted && Object.values(loginErrors).some(Boolean);
-  const showRegBanner   = regSubmitted   && Object.values(regErrors).some(Boolean);
+  const showRegBanner = regSubmitted && Object.values(regErrors).some(Boolean);
 
   return (
     <main className="flex h-auto bg-white">
@@ -254,7 +255,15 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
         <div className="w-full max-w-[416px]">
           <div className={`${isRegister ? 'mb-3' : 'mb-5'} flex justify-center`}>
             <div className={`${isRegister ? 'h-14 w-14 text-2xl' : 'h-16 w-16 text-3xl'} flex items-center justify-center rounded-full bg-primary-600 text-white shadow-xl shadow-primary-100`}>
-              <icons.logo />
+              {settings?.logo ? (
+                <img
+                  src={settings.logo}
+                  alt="Logo"
+                  className="h-full w-full object-cover rounded-full"
+                />
+              ) : (
+                <icons.logo />
+              )}
             </div>
           </div>
 
@@ -263,7 +272,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
               {isRegister ? 'Create Your Account' : 'Welcome Back!'}
             </h2>
             <p className={`${isRegister ? 'mt-1' : 'mt-2'} text-[13px] font-semibold text-text-700`}>
-              {isRegister ? 'Join POS Cafe and start managing your business smarter.' : 'Sign in to continue to POS Cafe'}
+              {isRegister ? `Join ${settings?.cafe_name || "POS Cafe"} and start managing your business smarter.` : `Sign in to continue to ${settings?.cafe_name || "POS Cafe"}`}
             </p>
           </div>
 
@@ -352,7 +361,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
           )}
 
           <p className={`${isRegister ? 'mt-3' : 'mt-4'} text-center text-[12px] font-medium text-slate-400`}>
-            © 2024 POS Cafe. All rights reserved.
+            © 2024 {settings?.cafe_name || "POS Cafe"}. All rights reserved.
           </p>
         </div>
       </section>

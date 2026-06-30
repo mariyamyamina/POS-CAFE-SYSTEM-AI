@@ -56,6 +56,15 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const handleAddItemToBill = (item, qty = 1) => {
     const idx = billItems.findIndex((bi) => bi.id === item.id);
+    const currentQtyInBill = idx !== -1 ? billItems[idx].quantity : 0;
+    const totalRequestedQty = currentQtyInBill + qty;
+    
+    // Check if sufficient stock is available
+    if (totalRequestedQty > item.in_stock) {
+      showToast(`Only ${item.in_stock} ${item.name} available in stock`);
+      return;
+    }
+    
     if (idx !== -1) {
       const updated = [...billItems];
       updated[idx].quantity += qty;
@@ -78,6 +87,15 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const handleUpdateQuantity = (id, newQty) => {
     if (newQty <= 0) { handleRemoveItem(id); return; }
+    
+    // Check if sufficient stock is available
+    const item = billItems.find((i) => i.id === id);
+    const menuItem = menuItems.find((m) => m.id === id);
+    if (item && menuItem && newQty > menuItem.in_stock) {
+      showToast(`Only ${menuItem.in_stock} ${menuItem.name} available in stock`);
+      return;
+    }
+    
     setBillItems(billItems.map((item) => item.id === id ? { ...item, quantity: newQty } : item));
   };
 
@@ -182,6 +200,14 @@ const handlePrint = async () => {
     }
     const target = billItems.find((i) => i.id === selectedItemId);
     if (!target) return;
+    
+    // Check if sufficient stock is available before adding
+    const menuItem = menuItems.find((m) => m.id === selectedItemId);
+    if (menuItem && target.quantity + 1 > menuItem.in_stock) {
+      showToast(`Only ${menuItem.in_stock} ${menuItem.name} available in stock`);
+      return;
+    }
+    
     handleUpdateQuantity(selectedItemId, target.quantity + 1);
   };
 

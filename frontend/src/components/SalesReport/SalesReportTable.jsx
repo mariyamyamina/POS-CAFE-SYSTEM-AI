@@ -64,7 +64,7 @@ const SalesReportTable = ({ reports, groupBy = 'item', settings }) => {
         };
       }
       groups[row.sale_id].items.push(row);
-      groups[row.sale_id].subtotal += row.totalPrice;
+      groups[row.sale_id].subtotal += Number(row.totalPrice);
     });
 
     return Object.values(groups)
@@ -117,16 +117,16 @@ const SalesReportTable = ({ reports, groupBy = 'item', settings }) => {
         <table className="min-w-[760px] w-full border-collapse text-left">
           <thead>
             <tr className="h-[46px] bg-[#F9FAFC]">
-              <th className="px-5 text-[11px] font-bold text-[#050A24]">Bill ID</th>
-              <th className="px-5 text-[11px] font-bold text-[#050A24]">Items</th>
-              <th className="px-5 text-[11px] font-bold text-[#050A24]">Bill Amount</th>
+              <th className="px-5 text-xs font-bold text-[#050A24]">Bill ID</th>
+              <th className="px-5 text-xs font-bold text-[#050A24]">Items</th>
+              <th className="px-5 text-xs font-bold text-[#050A24]">Bill Amount</th>
             </tr>
           </thead>
           <tbody>
             {billGroups.map((bill) => (
               <React.Fragment key={bill.saleId}>
                 {/* Group header row */}
-                <tr className="h-[44px] border-b border-[#EEF0F5] bg-[#F9FAFC] text-[12px] font-semibold text-[#050A24]">
+                <tr className="h-[44px] border-b border-[#EEF0F5] bg-[#F9FAFC] text-[12px] font-semibold text-primary-700">
                   <td className="px-5" colSpan={2}>Bill ID: {bill.saleId}</td>
                   <td className="px-5">
                     <div className="flex items-center justify-end gap-2">

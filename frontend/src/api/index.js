@@ -139,16 +139,16 @@ export const rolesApi = {
 };
 
 export const settingsApi = {
-  getSettings: () => request('/settings'),
-  updateSettings: (payload) => request('/settings', { method: 'PUT', body: payload }),
+  getSettings: () => request('/api/settings'),
+  updateSettings: (payload) => request('/api/settings', { method: 'PUT', body: payload }),
 };
 
 export const categoriesApi = {
-  getCategories: () => request('/categories'),
-  getCategory: (categoryId) => request(`/categories/${categoryId}`),
-  createCategory: (payload) => request('/categories', { method: 'POST', body: payload }),
-  updateCategory: (categoryId, payload) => request(`/categories/${categoryId}`, { method: 'PUT', body: payload }),
-  deleteCategory: (categoryId) => request(`/categories/${categoryId}`, { method: 'DELETE' }),
+  getCategories: () => request('/api/categories'),
+  getCategory: (categoryId) => request(`/api/categories/${categoryId}`),
+  createCategory: (payload) => request('/api/categories', { method: 'POST', body: payload }),
+  updateCategory: (categoryId, payload) => request(`/api/categories/${categoryId}`, { method: 'PUT', body: payload }),
+  deleteCategory: (categoryId) => request(`/api/categories/${categoryId}`, { method: 'DELETE' }),
 };
 
 // Builds a FormData payload from a plain fields object.
@@ -171,13 +171,13 @@ const buildInventoryFormData = (fields = {}, imageFile) => {
 };
 
 export const inventoryApi = {
-  getItems: () => request('/inventory'),
-  getItem: (itemId) => request(`/inventory/${itemId}`),
+  getItems: () => request('/api/inventory'),
+  getItem: (itemId) => request(`/api/inventory/${itemId}`),
   createItem: (fields, imageFile) =>
-    request('/inventory', { method: 'POST', body: buildInventoryFormData(fields, imageFile) }),
+    request('/api/inventory', { method: 'POST', body: buildInventoryFormData(fields, imageFile) }),
   updateItem: (itemId, fields, imageFile) =>
-    request(`/inventory/${itemId}`, { method: 'PUT', body: buildInventoryFormData(fields, imageFile) }),
-  deleteItem: (itemId) => request(`/inventory/${itemId}`, { method: 'DELETE' }),
+    request(`/api/inventory/${itemId}`, { method: 'PUT', body: buildInventoryFormData(fields, imageFile) }),
+  deleteItem: (itemId) => request(`/api/inventory/${itemId}`, { method: 'DELETE' }),
 };
 
 export { API_BASE_URL, getStoredToken, getStoredRefreshToken, getStoredUser, saveSession, clearSession, request };
@@ -186,15 +186,19 @@ export default request;
 // ── Append this block to api/index.js, right after inventoryApi ──
 
 export const salesApi = {
-  createSale: (payload) => request('/sales', { method: 'POST', body: payload }),
-  getSale: (saleId) => request(`/sales/${saleId}`),
-  getSales: () => request('/sales'),
+  createSale: (payload) => request('/api/sales', { method: 'POST', body: payload }),
+  getSale: (saleId) => request(`/api/sales/${saleId}`),
+  getSales: () => request('/api/sales'),
   // params: { date_from, date_to, item_name } — all optional, passed as query string
   getSalesReport: (params = {}) => {
     const query = new URLSearchParams(
       Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
     ).toString();
-    return request(`/sales-report${query ? `?${query}` : ''}`);
+    return request(`/api/sales-report${query ? `?${query}` : ''}`);
   },
+};
+
+export const dashboardApi = {
+  getDashboardData: () => request('/api/dashboard'),
 };
 

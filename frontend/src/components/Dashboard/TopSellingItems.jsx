@@ -3,26 +3,15 @@ import { icons } from '../../constants/icons'
 
 const FILTERS = ['This Week', 'This Month']
 
-const ITEMS_BY_FILTER = {
-  'This Week': [
-    { name: 'Chocolate Milkshake', image: 'images/chocolate-milkshake.png', qty: 11, revenue: 1100.0 },
-    { name: 'Smoothie', image: 'images/smoothie.png', qty: 6, revenue: 420.0 },
-    { name: 'Almond Milk', image: 'images/almond-milk.png', qty: 6, revenue: 480.0 },
-    { name: 'Cream Roll', image: 'images/cream-roll.png', qty: 5, revenue: 200.0 },
-    { name: 'Cappuccino', image: 'images/Cappuccino.png', qty: 4, revenue: 800.0 },
-  ],
-  'This Month': [
-    { name: 'Chocolate Milkshake', image: 'images/chocolate-milkshake.png', qty: 38, revenue: 3800.0 },
-    { name: 'Cappuccino', image: 'images/Cappuccino.png', qty: 22, revenue: 4400.0 },
-    { name: 'Smoothie', image: 'images/smoothie.png', qty: 19, revenue: 1330.0 },
-    { name: 'Almond Milk', image: 'images/almond-milk.png', qty: 15, revenue: 1200.0 },
-    { name: 'Cream Roll', image: 'images/cream-roll.png', qty: 12, revenue: 480.0 },
-  ],
-}
-
-const TopSellingItems = ({ onViewAll }) => {
+const TopSellingItems = ({ data = [], onViewAll }) => {
   const [filter, setFilter] = useState('This Week')
-  const items = ITEMS_BY_FILTER[filter]
+
+  // Map API data to component format
+  const items = data.map(item => ({
+    name: item.item_name,
+    qty: item.total_sold,
+    revenue: item.total_revenue
+  }))
 
   return (
     <div className="flex flex-col rounded-xl border border-text-100 bg-white p-4">
@@ -49,24 +38,23 @@ const TopSellingItems = ({ onViewAll }) => {
       </div>
 
       <div className="mt-1 flex-1 divide-y divide-text-100">
-        {items.map((item, i) => (
-          <div key={item.name} className="grid grid-cols-[1.4fr_0.6fr_0.7fr] items-center gap-2 py-2.5">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="w-3 text-[12px] font-medium text-text-400">{i + 1}.</span>
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F4F5F9]">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="h-7 w-7 object-contain"
-                  onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                />
+        {items.length === 0 ? (
+          <div className="text-center text-text-400 py-4">No sales data yet</div>
+        ) : (
+          items.map((item, i) => (
+            <div key={item.name} className="grid grid-cols-[1.4fr_0.6fr_0.7fr] items-center gap-2 py-2.5">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="w-3 text-[12px] font-medium text-text-400">{i + 1}.</span>
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F4F5F9]">
+                  <icons.box className="h-4 w-4 text-text-400" />
+                </div>
+                <span className="truncate text-[10px] font-medium text-text-800">{item.name}</span>
               </div>
-              <span className="truncate text-[10px] font-medium text-text-800">{item.name}</span>
+              <span className="text-center text-[10px] font-semibold text-text-700">{item.qty}</span>
+              <span className="text-right text-[10px] font-semibold text-text-900">{item.revenue.toFixed(2)}</span>
             </div>
-            <span className="text-center text-[10px] font-semibold text-text-700">{item.qty}</span>
-            <span className="text-right text-[10px] font-semibold text-text-900">{item.revenue.toFixed(2)}</span>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <button

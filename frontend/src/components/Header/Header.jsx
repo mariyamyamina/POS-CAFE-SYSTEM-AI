@@ -11,7 +11,7 @@ const Header = ({
   onToggleSidebar
 }) => {
   return (
-    <header className="flex h-14 w-full items-center justify-between bg-text-50 px-3 lg:px-4">
+    <header className="flex h-14 w-full items-center justify-between bg-text-50 px-3 pt-3 lg:px-4">
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleSidebar}

@@ -10,29 +10,29 @@ const CAFE_ADDRESS_FALLBACK = 'Tirunelveli';
 const CAFE_PHONE_FALLBACK = 'Ph: 9876543210';
 
 const formatBillDate = (date) =>
-  date.toLocaleString('en-GB', {
-    day: 'numeric', month: 'numeric', year: 'numeric',
-    hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
-  }).replace(',', ',');
+    date.toLocaleString('en-GB', {
+        day: 'numeric', month: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
+    }).replace(',', ',');
 
 /**
  * @param {object} sale - the SaleResponse object returned from salesApi.createSale()
  * @param {object} settings - { cafe_name } from settingsApi.getSettings(), or null
  */
 export const printBill = (sale, settings) => {
-  const cafeName = settings?.cafe_name || 'POS Cafe';
-  const billDate = formatBillDate(new Date(sale.created_at));
+    const cafeName = settings?.cafe_name || 'POS Cafe';
+    const billDate = formatBillDate(new Date(sale.created_at));
 
-  const itemRows = sale.items.map((item) => `
+    const itemRows = sale.items.map((item) => `
     <tr>
       <td style="padding:6px 0;">${item.item_name}</td>
       <td style="padding:6px 0; text-align:center;">${item.qty}</td>
-      <td style="padding:6px 0; text-align:right;">₹${item.unit_price.toFixed(2)}</td>
-      <td style="padding:6px 0; text-align:right;">₹${item.total}</td>
+      <td style="padding:6px 0; text-align:right;">₹${Number(item.unit_price).toFixed(2)}</td>
+      <td style="padding:6px 0; text-align:right;">₹${Number(item.total).toFixed(2)}</td>
     </tr>
   `).join('');
 
-  const html = `
+    const html = `
     <!DOCTYPE html>
     <html>
       <head>
@@ -111,11 +111,11 @@ export const printBill = (sale, settings) => {
         <div class="divider"></div>
 
         <table class="totals-table">
-          <tr><td>Total</td><td>₹${sale.total_amt.toFixed(2)}</td></tr>
-          <tr><td>GST (7%)</td><td>₹${sale.gst.toFixed(2)}</td></tr>
-          <tr class="payable-row"><td>Payable</td><td>₹${sale.payable.toFixed(2)}</td></tr>
-          <tr><td>Tender</td><td>₹${sale.tender.toFixed(2)}</td></tr>
-          <tr><td>Change</td><td>₹${sale.change_amt.toFixed(2)}</td></tr>
+          <tr><td>Total</td><td>₹${Number(sale.total_amt).toFixed(2)}</td></tr>
+<tr><td>GST (7%)</td><td>₹${Number(sale.gst).toFixed(2)}</td></tr>
+<tr class="payable-row"><td>Payable</td><td>₹${Number(sale.payable).toFixed(2)}</td></tr>
+<tr><td>Tender</td><td>₹${Number(sale.tender).toFixed(2)}</td></tr>
+<tr><td>Change</td><td>₹${Number(sale.change_amt).toFixed(2)}</td></tr>
         </table>
 
         <div class="footer">
@@ -126,15 +126,15 @@ export const printBill = (sale, settings) => {
     </html>
   `;
 
-  const printWindow = window.open('', '_blank', 'width=480,height=720');
-  if (!printWindow) {
-    // Popup blocked — caller should toast this
-    throw new Error('Unable to open print window. Please allow popups for this site.');
-  }
-  printWindow.document.write(html);
-  printWindow.document.close();
-  printWindow.onload = () => {
-    printWindow.focus();
-    printWindow.print();
-  };
+    const printWindow = window.open('', '_blank', 'width=480,height=720');
+    if (!printWindow) {
+        // Popup blocked — caller should toast this
+        throw new Error('Unable to open print window. Please allow popups for this site.');
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+    };
 };

@@ -15,13 +15,13 @@ from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryRespons
 router = APIRouter()
 
 
-@router.get("/categories", response_model=List[CategoryResponse])
+@router.get("/api/categories", response_model=List[CategoryResponse])
 def get_all_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get all categories."""
     return get_categories(db, skip=skip, limit=limit)
 
 
-@router.get("/categories/{category_id}", response_model=CategoryResponse)
+@router.get("/api/categories/{category_id}", response_model=CategoryResponse)
 def get_category_by_id(category_id: int, db: Session = Depends(get_db)):
     """Get a single category by ID."""
     category = get_category(db, category_id)
@@ -30,7 +30,7 @@ def get_category_by_id(category_id: int, db: Session = Depends(get_db)):
     return category
 
 
-@router.post("/categories", response_model=CategoryResponse)
+@router.post("/api/categories", response_model=CategoryResponse)
 def create_new_category(category: CategoryCreate, db: Session = Depends(get_db)):
     """Create a new category."""
     # Check if category with same name already exists
@@ -42,7 +42,7 @@ def create_new_category(category: CategoryCreate, db: Session = Depends(get_db))
     return create_category(db, name=category.name, icon=category.icon, description=category.description)
 
 
-@router.put("/categories/{category_id}", response_model=CategoryResponse)
+@router.put("/api/categories/{category_id}", response_model=CategoryResponse)
 def update_existing_category(category_id: int, category: CategoryUpdate, db: Session = Depends(get_db)):
     """Update an existing category."""
     updated = update_category(db, category_id, name=category.name, icon=category.icon, description=category.description)
@@ -51,7 +51,7 @@ def update_existing_category(category_id: int, category: CategoryUpdate, db: Ses
     return updated
 
 
-@router.delete("/categories/{category_id}")
+@router.delete("/api/categories/{category_id}")
 def delete_existing_category(category_id: int, db: Session = Depends(get_db)):
     """Delete a category."""
     deleted = delete_category(db, category_id)

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.get("/settings", response_model=SettingsResponse)
+@router.get("/api/settings", response_model=SettingsResponse)
 def get_current_settings(db: Session = Depends(get_db)):
     """Get current application settings."""
     try:
@@ -21,7 +21,7 @@ def get_current_settings(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.put("/settings", response_model=SettingsResponse)
+@router.put("/api/settings", response_model=SettingsResponse)
 def update_current_settings(settings_update: SettingsUpdate, db: Session = Depends(get_db)):
     """Update application settings."""
     try:

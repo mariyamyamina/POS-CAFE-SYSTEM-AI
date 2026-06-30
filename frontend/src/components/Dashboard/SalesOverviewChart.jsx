@@ -12,28 +12,6 @@ import { icons } from '../../constants/icons'
 
 const FILTERS = ['Daily', 'Weekly', 'Monthly']
 
-const DATA_BY_FILTER = {
-  Daily: [
-    { date: '21 Jun', sales: 1100 },
-    { date: '22 Jun', sales: 2200 },
-    { date: '23 Jun', sales: 550 },
-    { date: '24 Jun', sales: 2200 },
-    { date: '25 Jun', sales: 0 },
-  ],
-  Weekly: [
-    { date: 'Week 1', sales: 4200 },
-    { date: 'Week 2', sales: 5100 },
-    { date: 'Week 3', sales: 3800 },
-    { date: 'Week 4', sales: 5106.93 },
-  ],
-  Monthly: [
-    { date: 'Mar', sales: 15000 },
-    { date: 'Apr', sales: 18200 },
-    { date: 'May', sales: 16500 },
-    { date: 'Jun', sales: 18106.93 },
-  ],
-}
-
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
     return (
@@ -48,10 +26,25 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null
 }
 
-export const SalesOverviewChart = () => {
+export const SalesOverviewChart = ({ data = [] }) => {
   const [filter, setFilter] = useState('Daily')
 
-  const chartData = DATA_BY_FILTER[filter]
+  // Format date for display
+  const chartData = data.map(item => {
+    try {
+      return {
+        date: new Date(item.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
+        sales: item.total
+      };
+    } catch (e) {
+      console.error('Error parsing date:', e);
+      return {
+        date: item.date,
+        sales: item.total
+      };
+    }
+  })
+
   const totalSales = chartData.reduce((sum, item) => sum + Number(item.sales), 0)
 
   return (

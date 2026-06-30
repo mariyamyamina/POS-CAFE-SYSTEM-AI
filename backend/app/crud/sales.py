@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 
 from app.models.sales import SalesHdr, SalesDtl
+from app.models.inventory import InventoryItem
 from app.schemas.sales import SaleCreate
 
 
@@ -13,6 +14,7 @@ def create_sale(db: Session, sale_data: SaleCreate, cashier_id: int) -> SalesHdr
     Creates a sales_hdr row plus all its sales_dtl line items in a single
     DB transaction — if anything fails, nothing is committed (no orphaned
     header with missing lines, or vice versa).
+    Also updates inventory: decreases in_stock and increases sold for each item.
     """
     hdr = SalesHdr(
         table_no=sale_data.table_no,
@@ -36,6 +38,13 @@ def create_sale(db: Session, sale_data: SaleCreate, cashier_id: int) -> SalesHdr
             unit_price=line.unit_price,
             total=line.qty * line.unit_price,
         ))
+
+        # Update inventory: decrease in_stock and increase sold
+        if line.item_id:
+            inventory_item = db.query(InventoryItem).filter(InventoryItem.id == line.item_id).first()
+            if inventory_item:
+                inventory_item.in_stock -= line.qty
+                inventory_item.sold += line.qty
 
     db.commit()
     db.refresh(hdr)

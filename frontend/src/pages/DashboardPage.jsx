@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import AppLayout from '../layout/AppLayout';
 import DashboardHeader from '../components/Dashboard/DashboardHeader';
 import StatCard from '../components/Dashboard/StatCard';
@@ -7,22 +7,7 @@ import TopSellingItems from '../components/Dashboard/TopSellingItems';
 import RecentTransactions from '../components/Dashboard/RecentTransactions';
 import { icons } from '../constants/icons';
 import { useSettings } from '../context/SettingsContext';
-
-const STAT_CARDS = [
-    { icon: 'sales', iconBg: '#F5F3FF', iconColor: '#7C3AED', label: 'Total Sales', value: '6050.93', change: '+0%', trend: 'up' },
-    { icon: 'orders', iconBg: '#FFF1E8', iconColor: '#FF8A3C', label: 'Total Orders', value: '122', change: '-0%', trend: 'down' },
-    { icon: 'users', iconBg: '#EAF1FF', iconColor: '#3B82F6', label: 'Total Users', value: '70', change: '+0%', trend: 'up' },
-    { icon: 'barChart', iconBg: '#F5F3FF', iconColor: '#7C3AED', label: 'Average Order Value', value: '732.13', change: '+0%', trend: 'up' },
-    { icon: 'box', iconBg: '#E9FBF3', iconColor: '#10B981', label: 'Total Products', value: '102', change: '+0%', trend: 'up' },
-];
-
-const LOW_STOCK_ITEMS = [
-    { name: 'Paneer bun', unit: 'Piece', stock: 0, image: 'images/paneer-bun.png', level: 'critical' },
-    { name: 'Smoothie', unit: 'Cup', stock: 10, image: 'images/smoothie.png', level: 'ok' },
-    { name: 'Egg Puff', unit: 'Pcs', stock: 2, image: 'images/egg-puff.png', level: 'critical' },
-    { name: 'Hot Chocolate', unit: 'Cup', stock: 6, image: 'images/hot-chocolate.png', level: 'warning' },
-    { name: 'Chocolate Milkshake', unit: 'Glass', stock: 4, image: 'images/chocolate-milkshake.png', level: 'warning' },
-];
+import { dashboardApi } from '../api';
 
 const QUICK_ACTIONS = [
     { icon: 'fileText', label: 'New Bill', bg: '#F5F3FF', color: '#7C3AED' },
@@ -40,6 +25,34 @@ const stockColor = (level) => {
 
 const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     const { settings } = useSettings();
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    const loadDashboardData = async () => {
+        try {
+            setLoading(true);
+            const data = await dashboardApi.getDashboardData();
+            setDashboardData(data);
+        } catch (error) {
+            console.error('Failed to load dashboard data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const statCards = dashboardData ? [
+        { icon: 'sales', iconBg: '#F5F3FF', iconColor: '#7C3AED', label: 'Total Sales', value: dashboardData.stats.total_sales.toFixed(2), change: '+0%', trend: 'up' },
+        { icon: 'orders', iconBg: '#FFF1E8', iconColor: '#FF8A3C', label: 'Total Orders', value: dashboardData.stats.total_orders, change: '+0%', trend: 'up' },
+        { icon: 'users', iconBg: '#EAF1FF', iconColor: '#3B82F6', label: 'Total Users', value: dashboardData.stats.total_users, change: '+0%', trend: 'up' },
+        { icon: 'barChart', iconBg: '#F5F3FF', iconColor: '#7C3AED', label: 'Average Order Value', value: dashboardData.stats.average_order_value.toFixed(2), change: '+0%', trend: 'up' },
+        { icon: 'box', iconBg: '#E9FBF3', iconColor: '#10B981', label: 'Total Products', value: dashboardData.stats.total_products, change: '+0%', trend: 'up' },
+    ] : [];
+
+    const lowStockItems = dashboardData?.low_stock_items || [];
     
     return (
         <AppLayout activePage="dashboard" onLogout={onLogout} onNavigate={onNavigate} user={user}>
@@ -49,16 +62,20 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
                 {/* Stat cards row */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                    {STAT_CARDS.map((card) => (
-                        <StatCard key={card.label} {...card} />
-                    ))}
+                    {loading ? (
+                        <div className="col-span-full text-center text-text-400">Loading...</div>
+                    ) : (
+                        statCards.map((card) => (
+                            <StatCard key={card.label} {...card} />
+                        ))
+                    )}
                 </div>
 
                 {/* Main grid: Sales Overview | Top Selling | Recent Transactions */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1.1fr_1.1fr]">
-                    <SalesOverviewChart />
-                    <TopSellingItems onViewAll={() => onNavigate && onNavigate('inventory')} />
-                    <RecentTransactions onViewAll={() => onNavigate && onNavigate('salesReport')} />
+                    <SalesOverviewChart data={dashboardData?.sales_overview || []} />
+                    <TopSellingItems data={dashboardData?.top_selling_items || []} onViewAll={() => onNavigate && onNavigate('inventory')} />
+                    <RecentTransactions data={dashboardData?.recent_transactions || []} onViewAll={() => onNavigate && onNavigate('salesReport')} />
                 </div>
 
                 {/* Bottom row: Low Stock Alerts | Quick Actions */}
@@ -82,21 +99,31 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                         </div>
 
                         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                            {LOW_STOCK_ITEMS.map((item) => (
-                                <div key={item.name} className="flex flex-col items-center rounded-lg border border-text-100 p-3 text-center">
-                                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-[#F4F5F9]">
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="h-10 w-10 object-contain"
-                                            onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
-                                        />
+                            {loading ? (
+                                <div className="col-span-full text-center text-text-400">Loading...</div>
+                            ) : lowStockItems.length === 0 ? (
+                                <div className="col-span-full text-center text-text-400">No low stock items</div>
+                            ) : (
+                                lowStockItems.map((item) => (
+                                    <div key={item.id} className="flex flex-col items-center rounded-lg border border-text-100 p-3 text-center">
+                                        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md bg-[#F4F5F9]">
+                                            {item.image_url ? (
+                                                <img
+                                                    src={item.image_url}
+                                                    alt={item.name}
+                                                    className="h-10 w-10 object-contain"
+                                                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                                />
+                                            ) : (
+                                                <icons.box className="h-6 w-6 text-text-400" />
+                                            )}
+                                        </div>
+                                        <p className="mt-2 truncate text-[11px] font-semibold text-text-800">{item.name}</p>
+                                        <p className="text-[10px] text-text-400">{item.unit}</p>
+                                        <p className={`mt-1 text-[11px] font-bold ${stockColor(item.level)}`}>Stock: {item.stock}</p>
                                     </div>
-                                    <p className="mt-2 truncate text-[11px] font-semibold text-text-800">{item.name}</p>
-                                    <p className="text-[10px] text-text-400">{item.unit}</p>
-                                    <p className={`mt-1 text-[11px] font-bold ${stockColor(item.level)}`}>Stock: {item.stock}</p>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
 
