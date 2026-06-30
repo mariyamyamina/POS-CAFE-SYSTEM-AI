@@ -7,6 +7,7 @@ import CategoryList from '../components/Menu/CategoryList';
 import ProductGrid from '../components/Menu/ProductGrid';
 import BottomActions from '../components/Billing/BottomActions';
 import PriceAmendment from '../components/Billing/PriceAmendment';
+import Toast from '../components/common/Toast';
 
 import { inventoryApi, categoriesApi } from '../api';
 
@@ -23,6 +24,11 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [showPriceAmendment, setShowPriceAmendment] = useState(false);
   const [menuItems, setMenuItems]           = useState([]);
   const [mobileTab, setMobileTab]           = useState('menu');
+
+  // ── New state for the bill-row selection, tender input, and toast ──
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [tender, setTender]                 = useState('');
+  const [toastMessage, setToastMessage]     = useState(null);
 
   React.useEffect(() => {
     Promise.all([inventoryApi.getItems(), categoriesApi.getCategories()])
@@ -47,6 +53,8 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const totalAmount = billItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
+  const showToast = (msg) => setToastMessage(msg);
+
   const handleAddItemToBill = (item, qty = 1) => {
     const idx = billItems.findIndex((bi) => bi.id === item.id);
     if (idx !== -1) {
@@ -64,26 +72,81 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     if (matched) { handleAddItemToBill(matched, quantityInput); setItemNumberInput(''); setQuantityInput(1); }
   };
 
-  const handleRemoveItem     = (id) => setBillItems(billItems.filter((item) => item.id !== id));
+  const handleRemoveItem = (id) => {
+    setBillItems(billItems.filter((item) => item.id !== id));
+    setSelectedItemId((current) => (current === id ? null : current));
+  };
+
   const handleUpdateQuantity = (id, newQty) => {
     if (newQty <= 0) { handleRemoveItem(id); return; }
     setBillItems(billItems.map((item) => item.id === id ? { ...item, quantity: newQty } : item));
   };
 
-  const handleNewBill = () => { setBillItems([]); setTableNumber(''); setCovers(''); setItemNumberInput(''); setQuantityInput(1); setShowPriceAmendment(false); };
-  const handlePriceAmendment       = () => setShowPriceAmendment(true);
-  const handleQuickAdd             = (amount) => setBillItems([...billItems, { id: 999 + Math.floor(Math.random() * 100), name: `Quick Charge ₹${amount}`, quantity: 1, unitPrice: amount }]);
-  const handleGiftVoucher          = () => {};
-  const handleOpenCashBox          = () => {};
-  const handleGoodsReturn          = () => {};
-  const handleCancelItem           = () => { if (billItems.length > 0) handleRemoveItem(billItems[billItems.length - 1].id); };
-  const handleAddItem              = () => {};
-  const handleTerminateTransaction = () => { if (billItems.length > 0) setBillItems([]); };
+  const handleNewBill = () => {
+    setBillItems([]); setTableNumber(''); setCovers(''); setItemNumberInput(''); setQuantityInput(1);
+    setShowPriceAmendment(false); setSelectedItemId(null); setTender('');
+  };
+
+  const handlePriceAmendment = () => {
+    if (totalAmount === 0) {
+      showToast('Add items to the bill before price amendment');
+      return;
+    }
+    setShowPriceAmendment(true);
+  };
+
+  // ₹ quick-add buttons: only allowed inside Price Amendment, adds to tender
+  const handleQuickAdd = (amount) => {
+    if (!showPriceAmendment) {
+      showToast('Quick add buttons only work in Price Amendment');
+      return;
+    }
+    setTender((prev) => String((parseFloat(prev) || 0) + amount));
+  };
+
+  const handleGiftVoucher = () => {};
+  const handleOpenCashBox = () => {};
+  const handleGoodsReturn = () => {};
+
+  // Cancel Item: decrease qty of the selected bill row
+  const handleCancelItem = () => {
+    if (!selectedItemId) {
+      showToast('Select an item in the bill first');
+      return;
+    }
+    const target = billItems.find((i) => i.id === selectedItemId);
+    if (!target) return;
+    handleUpdateQuantity(selectedItemId, target.quantity - 1);
+  };
+
+  // Add Item: increase qty of the selected bill row
+  const handleAddItem = () => {
+    if (!selectedItemId) {
+      showToast('Select an item in the bill first');
+      return;
+    }
+    const target = billItems.find((i) => i.id === selectedItemId);
+    if (!target) return;
+    handleUpdateQuantity(selectedItemId, target.quantity + 1);
+  };
+
+  // Terminate: only works inside Price Amendment, takes you back to Bill Table
+  const handleTerminateTransaction = () => {
+    if (!showPriceAmendment) {
+      showToast('Terminate can only happen in Price Amendment');
+      return;
+    }
+    setShowPriceAmendment(false);
+    setTender('');
+  };
+
   const handlePrint                = () => {};
   const handleReservedTransaction  = () => {};
-  const handleDeleteAllTransaction = () => { if (billItems.length > 0) setBillItems([]); };
+  const handleDeleteAllTransaction = () => { if (billItems.length > 0) setBillItems([]); setSelectedItemId(null); };
   const handleRestore              = () => {};
-  const handleMainMenu             = () => {};
+
+  // Main Menu: navigate to dashboard via your existing router prop
+  const handleMainMenu = () => { onNavigate && onNavigate('dashboard'); };
 
   const bottomActionProps = {
     onNewBill: handleNewBill, onPriceAmendment: handlePriceAmendment,
@@ -106,6 +169,22 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     />
   );
 
+  const billOrAmendmentBlock = showPriceAmendment ? (
+    <PriceAmendment
+      totalAmount={totalAmount}
+      tender={tender}
+      onTenderChange={setTender}
+    />
+  ) : (
+    <BillTable
+      items={billItems}
+      onRemoveItem={handleRemoveItem}
+      onUpdateQuantity={handleUpdateQuantity}
+      selectedItemId={selectedItemId}
+      onSelectItem={setSelectedItemId}
+    />
+  );
+
   return (
     <AppLayout activePage="billing" onLogout={onLogout} onNavigate={onNavigate} user={user}>
 
@@ -121,14 +200,9 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
       {/* ══════════════════════════════════════════════════════
           MOBILE  (< lg)
-          - Tab bar is sticky at top
-          - Tab content is ONE long scroll — nothing pinned
-          - Menu tab: category strip → product grid → BottomActions
-          - Bill tab:  BillTable → Keypad → BottomActions
          ══════════════════════════════════════════════════════ */}
       <div className="flex flex-1 flex-col overflow-hidden lg:hidden">
 
-        {/* Sticky tab bar */}
         <div className="sticky top-0 z-10 flex shrink-0 bg-white shadow-sm">
           <button
             onClick={() => setMobileTab('bill')}
@@ -157,11 +231,8 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
           </button>
         </div>
 
-        {/* ── MENU TAB — full page scroll ── */}
         {mobileTab === 'menu' && (
           <div className="flex-1 overflow-y-auto bg-white">
-
-            {/* Horizontal category strip — sticky below tab bar */}
             <div className="sticky top-0 z-10 overflow-x-auto border-b border-[#EEF0F6] bg-white"
                  style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
               <CategoryList
@@ -171,7 +242,6 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
               />
             </div>
 
-            {/* Product grid — natural height, scrolls with page */}
             <ProductGrid
               items={menuItems}
               billItems={billItems}
@@ -181,56 +251,33 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
               viewMode={viewMode}
             />
 
-            {/* BottomActions — scrolls into view at bottom of page */}
             <BottomActions {...bottomActionProps} />
-
           </div>
         )}
 
-        {/* ── BILL TAB — full page scroll ── */}
         {mobileTab === 'bill' && (
           <div className="flex-1 overflow-y-auto bg-[#F8F8FB]">
-
-            {/* BillTable */}
             <div className="p-3">
-              {showPriceAmendment ? (
-                <PriceAmendment
-                  totalAmount={totalAmount}
-                  onClose={() => setShowPriceAmendment(false)}
-                />
-              ) : (
-                <BillTable
-                  items={billItems}
-                  onRemoveItem={handleRemoveItem}
-                  onUpdateQuantity={handleUpdateQuantity}
-                />
-              )}
+              {billOrAmendmentBlock}
             </div>
 
-            {/* Keypad */}
             {keypadBlock}
 
-            {/* BottomActions — scrolls into view */}
             <BottomActions {...bottomActionProps} />
-
           </div>
         )}
 
       </div>
 
       {/* ══════════════════════════════════════════════════════
-          DESKTOP  (lg+) — original 3-column + fixed footer
+          DESKTOP  (lg+)
          ══════════════════════════════════════════════════════ */}
       <div className="hidden flex-1 flex-col overflow-hidden lg:flex">
         <div className="flex-1 overflow-hidden">
           <div className="grid h-full grid-cols-[450px_174px_minmax(420px,1fr)] gap-3 px-4 pt-3 pb-2">
 
             <div className="flex min-h-0 flex-col gap-2">
-              {showPriceAmendment ? (
-                <PriceAmendment totalAmount={totalAmount} onClose={() => setShowPriceAmendment(false)} />
-              ) : (
-                <BillTable items={billItems} onRemoveItem={handleRemoveItem} onUpdateQuantity={handleUpdateQuantity} />
-              )}
+              {billOrAmendmentBlock}
               {keypadBlock}
             </div>
 
@@ -250,6 +297,8 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
         </div>
         <BottomActions {...bottomActionProps} />
       </div>
+
+      <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
 
     </AppLayout>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { icons } from '../../constants/icons';
 
-const BillTable = ({ items = [], onRemoveItem, onUpdateQuantity }) => {
+const BillTable = ({ items = [], onRemoveItem, selectedItemId, onSelectItem }) => {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-text-100 bg-white">
       <div className="grid grid-cols-[2fr_0.75fr_1fr_1fr] border-b border-text-100 px-4 py-3 text-[12px] font-bold text-text-700">
@@ -26,11 +26,15 @@ const BillTable = ({ items = [], onRemoveItem, onUpdateQuantity }) => {
           <div className="divide-y divide-text-100">
             {items.map((item) => {
               const imageUrl = item.image;
+              const isSelected = item.id === selectedItemId;
 
               return (
                 <div
                   key={item.id}
-                  className="group grid grid-cols-[2fr_0.75fr_1fr_1fr] items-center gap-2 px-4 py-1 transition-colors hover:bg-text-50"
+                  onClick={() => onSelectItem && onSelectItem(item.id)}
+                  className={`group grid grid-cols-[2fr_0.75fr_1fr_1fr] items-center gap-2 px-4 py-1 cursor-pointer transition-colors hover:bg-text-50 ${
+                    isSelected ? 'bg-primary/5 ring-1 ring-inset ring-primary/40' : ''
+                  }`}
                 >
                   <div className="flex min-w-0 items-center gap-3 pr-2">
                     {imageUrl && (
@@ -60,7 +64,10 @@ const BillTable = ({ items = [], onRemoveItem, onUpdateQuantity }) => {
                   <div className="relative pr-6 text-right text-[11px] font-bold text-text-900">
                     ₹{(item.quantity * item.unitPrice).toFixed(2)}
                     <button
-                      onClick={() => onRemoveItem && onRemoveItem(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemoveItem && onRemoveItem(item.id);
+                      }}
                       className="absolute right-0 top-1/2 -translate-y-1/2 text-text-400 transition-colors hover:text-[#EF4444]"
                       type="button"
                       aria-label={`Remove ${item.name}`}

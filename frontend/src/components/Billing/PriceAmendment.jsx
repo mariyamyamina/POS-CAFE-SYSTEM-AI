@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { icons } from '../../constants/icons';
 
 const GST_RATE = 0.07;
 
-const PriceAmendment = ({ totalAmount = 0, onClose }) => {
-  const [tender, setTender] = useState('');
-
+const PriceAmendment = ({ totalAmount = 0, tender, onTenderChange }) => {
   const gstAmount = totalAmount * GST_RATE;
   const payable = totalAmount + gstAmount;
   const tenderNum = parseFloat(tender) || 0;
@@ -14,21 +12,11 @@ const PriceAmendment = ({ totalAmount = 0, onClose }) => {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-text-100 bg-white">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-text-100 px-4 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
-            <icons.fileText className="h-4 w-4" />
-          </div>
-          <span className="text-[14px] font-bold text-text-900">Price Amendment</span>
+      <div className="flex items-center gap-2 border-b border-text-100 px-4 py-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary">
+          <icons.fileText className="h-4 w-4" />
         </div>
-        <button
-          onClick={onClose}
-          type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-md text-text-400 transition-colors hover:bg-text-100 hover:text-text-700"
-          aria-label="Close"
-        >
-          <icons.close className="h-4 w-4" />
-        </button>
+        <span className="text-[14px] font-bold text-text-900">Price Amendment</span>
       </div>
 
       {/* Body */}
@@ -72,7 +60,7 @@ const PriceAmendment = ({ totalAmount = 0, onClose }) => {
               min="0"
               placeholder="0.00"
               value={tender}
-              onChange={(e) => setTender(e.target.value)}
+              onChange={(e) => onTenderChange(e.target.value)}
               className="h-10 w-28 bg-white px-3 text-[13px] font-semibold text-text-900 outline-none placeholder:text-text-300"
             />
           </div>

@@ -3,9 +3,6 @@ import { icons } from '../../constants/icons';
 import Sorting from '../common/Sorting';
 import { useSettings } from '../../context/SettingsContext';
 
-// ⚠️ Adjust this path to wherever your actual default app logo asset lives.
-import defaultItemImage from '/mug.svg';
-
 const statusStyles = {
   'In Stock': 'border-[#A8EBC4] bg-[#DFF9EA] text-[#00A650]',
   'Low Stock': 'border-[#FDBA74] bg-[#FFF3E7] text-[#FF5C00]',
@@ -29,10 +26,7 @@ const sortHeaders = [
 // the backend host, not the frontend dev server host.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-const resolveImageSrc = (imageUrl) => {
-  if (!imageUrl) return defaultItemImage;
-  return `${API_BASE_URL}${imageUrl}`;
-};
+const resolveImageSrc = (imageUrl) => `${API_BASE_URL}${imageUrl}`;
 
 const formatLastUpdated = (isoString) => {
   if (!isoString) return '—';
@@ -100,12 +94,16 @@ const InventoryTable = ({ items, onEditItem }) => {
                   <td className="px-5">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F7EDFF]">
-                        <img
-                          src={resolveImageSrc(item.image_url)}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                          onError={(ev) => { ev.currentTarget.src = defaultItemImage; }}
-                        />
+                        {item.image_url ? (
+                          <img
+                            src={resolveImageSrc(item.image_url)}
+                            alt={item.name}
+                            className="h-full w-full object-cover"
+                            onError={(ev) => { ev.currentTarget.style.display = 'none'; }}
+                          />
+                        ) : (
+                          <icons.logo className="h-4 w-4 text-primary" />
+                        )}
                       </div>
                       <span className="text-[#202B6E]">{item.name}</span>
                     </div>

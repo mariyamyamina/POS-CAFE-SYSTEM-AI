@@ -1,4 +1,5 @@
 import React from 'react';
+import { icons } from '../../constants/icons';
 
 const ProductCard = ({ item, onAdd, viewMode = "grid", quantity = 0 }) => {
   if (viewMode === "list") {
@@ -13,16 +14,17 @@ const ProductCard = ({ item, onAdd, viewMode = "grid", quantity = 0 }) => {
           </div>
         )}
         <div className="flex min-w-0 items-center gap-3">
-          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md bg-[#F4F5F9]">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="h-full w-full object-cover object-center"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60";
-              }}
-            />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F4F5F9]">
+            {item.image ? (
+              <img
+                src={item.image}
+                alt={item.name}
+                className="h-full w-full object-cover object-center"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <icons.logo className="h-5 w-5 text-primary" />
+            )}
           </div>
           <div className="min-w-0 text-left">
             <span className="block truncate text-xs font-semibold text-text-700">{item.name}</span>
@@ -45,15 +47,16 @@ const ProductCard = ({ item, onAdd, viewMode = "grid", quantity = 0 }) => {
         </div>
       )}
       <div className="flex h-12 w-full items-center justify-center overflow-hidden">
-        <img
-          src={item.image}
-          alt={item.name}
-          className="h-12 w-16 object-contain object-center transition-transform duration-300 hover:scale-105"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=150&auto=format&fit=crop&q=60";
-          }}
-        />
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.name}
+            className="h-12 w-16 object-contain object-center transition-transform duration-300 hover:scale-105"
+            onError={(e) => { e.target.style.display = 'none'; }}
+          />
+        ) : (
+          <icons.logo className="h-7 w-7 text-primary" />
+        )}
       </div>
 
       <div className="min-w-0">
