@@ -182,3 +182,19 @@ export const inventoryApi = {
 
 export { API_BASE_URL, getStoredToken, getStoredRefreshToken, getStoredUser, saveSession, clearSession, request };
 export default request;
+
+// ── Append this block to api/index.js, right after inventoryApi ──
+
+export const salesApi = {
+  createSale: (payload) => request('/sales', { method: 'POST', body: payload }),
+  getSale: (saleId) => request(`/sales/${saleId}`),
+  getSales: () => request('/sales'),
+  // params: { date_from, date_to, item_name } — all optional, passed as query string
+  getSalesReport: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+    ).toString();
+    return request(`/sales-report${query ? `?${query}` : ''}`);
+  },
+};
+

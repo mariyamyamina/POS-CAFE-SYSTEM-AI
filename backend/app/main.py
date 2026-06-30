@@ -11,6 +11,7 @@ from app.api.roles import router as roles_router
 from app.api.settings import router as settings_router
 from app.api.categories import router as categories_router
 from app.api.inventory import router as inventory_router
+from app.api.sales import router as sales_router
 from app.crud.user import get_user_by_username, create_user
 from app.crud.role import get_role_by_name, create_role
 
@@ -70,6 +71,7 @@ app.include_router(roles_router)
 app.include_router(settings_router)
 app.include_router(categories_router)
 app.include_router(inventory_router)
+app.include_router(sales_router)
 
 # ── Serve uploaded images as static files ─────────────────────────────────────
 # Images are saved to uploads/inventory/<uuid>.ext by the inventory CRUD.

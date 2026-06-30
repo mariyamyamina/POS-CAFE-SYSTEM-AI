@@ -1,41 +1,136 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import AppLayout from '../layout/AppLayout';
 import PageNavbar from '../components/common/PageNavbar';
 import Pagination from '../components/common/Pagination';
 import SalesReportFilterBar from '../components/SalesReport/SalesReportFilterBar';
 import SalesReportTable from '../components/SalesReport/SalesReportTable';
 import { icons } from '../constants/icons';
+import { salesApi, settingsApi } from '../api';
 
-const SALES_REPORTS = [
-  { id: 1, itemName: 'Almond Milk', soldQuantity: 1, totalPrice: 100 },
-  { id: 2, itemName: 'Black Tea', soldQuantity: 1, totalPrice: 25 },
-  { id: 3, itemName: 'Lemon Juice', soldQuantity: 1, totalPrice: 20 },
-  { id: 4, itemName: 'Veg Noodles', soldQuantity: 3, totalPrice: 360 },
-  { id: 5, itemName: 'Lemon Juice', soldQuantity: 2, totalPrice: 40 },
-  { id: 6, itemName: 'Ginger Tea', soldQuantity: 1, totalPrice: 35 },
-  { id: 7, itemName: 'Elaichi Tea', soldQuantity: 1, totalPrice: 35 },
-  { id: 8, itemName: 'Elaichi Tea', soldQuantity: 2, totalPrice: 70 },
-  { id: 9, itemName: 'Masala Tea', soldQuantity: 3, totalPrice: 90 },
-  { id: 10, itemName: 'Cold Coffee', soldQuantity: 2, totalPrice: 160 },
-  { id: 11, itemName: 'Paneer Momos', soldQuantity: 1, totalPrice: 120 },
-  { id: 12, itemName: 'Orange Juice', soldQuantity: 2, totalPrice: 120 },
-  { id: 13, itemName: 'Chocolate Shake', soldQuantity: 1, totalPrice: 140 },
-  { id: 14, itemName: 'Green Tea', soldQuantity: 1, totalPrice: 30 },
+const rangeToDates = (range) => {
+  const today = new Date();
+  const toISODate = (d) => d.toISOString().slice(0, 10);
+
+  if (range === 'Today') {
+    return { date_from: toISODate(today), date_to: toISODate(today) };
+  }
+  if (range === 'Yesterday') {
+    const y = new Date(today);
+    y.setDate(y.getDate() - 1);
+    return { date_from: toISODate(y), date_to: toISODate(y) };
+  }
+  if (range === 'This Week') {
+    const start = new Date(today);
+    start.setDate(start.getDate() - start.getDay());
+    return { date_from: toISODate(start), date_to: toISODate(today) };
+  }
+  if (range === 'This Month') {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { date_from: toISODate(start), date_to: toISODate(today) };
+  }
+  return {};
+};
+
+const GROUP_BY_OPTIONS = [
+  { value: 'item', label: 'Item Wise' },
+  { value: 'bill', label: 'Bill Wise' },
 ];
 
 const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
-  const totalPages = Math.ceil(SALES_REPORTS.length / pageSize);
+
+  const [itemFilter, setItemFilter] = useState('');
+  const [rangeFilter, setRangeFilter] = useState('Today');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+
+  const [groupBy, setGroupBy] = useState('item');
+  const [groupByOpen, setGroupByOpen] = useState(false);
+  const groupByRef = useRef(null);
+
+  const [settings, setSettings] = useState(null);
+
+  // Close the Item Wise / Bill Wise dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (groupByRef.current && !groupByRef.current.contains(e.target)) {
+        setGroupByOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Settings fetched once — passed to SalesReportTable for per-bill printing
+  useEffect(() => {
+    settingsApi.getSettings().then(setSettings).catch((err) => {
+      console.error('Failed to load settings:', err);
+    });
+  }, []);
+
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const dates = rangeFilter === 'Custom'
+        ? { date_from: customFrom || undefined, date_to: customTo || undefined }
+        : rangeToDates(rangeFilter);
+
+      const data = await salesApi.getSalesReport({
+        ...dates,
+        item_name: itemFilter || undefined,
+      });
+      // Map snake_case API fields to the camelCase shape SalesReportTable expects
+      const mapped = (data || []).map((r) => ({
+        id: r.id,
+        sale_id: r.sale_id,
+        bill_no: r.bill_no,
+        itemName: r.item_name,
+        soldQuantity: r.sold_quantity,
+        totalPrice: r.total_price,
+      }));
+      setReports(mapped);
+      setPage(1);
+    } catch (err) {
+      console.error('Failed to load sales report:', err);
+      setError(err.message || 'Failed to load sales report.');
+    } finally {
+      setLoading(false);
+    }
+  }, [rangeFilter, customFrom, customTo, itemFilter]);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
+
+  const handleReset = () => {
+    setItemFilter('');
+    setRangeFilter('Today');
+    setCustomFrom('');
+    setCustomTo('');
+  };
+
+  const totalPages = Math.max(1, Math.ceil(reports.length / pageSize));
   const visibleReports = useMemo(() => {
+    // Bill Wise groups its own pagination differently (by bill, not by row),
+    // so pagination is only sliced in Item Wise mode. Bill Wise shows all
+    // matching bills from the current filter on one page.
+    if (groupBy === 'bill') return reports;
     const start = (page - 1) * pageSize;
-    return SALES_REPORTS.slice(start, start + pageSize);
-  }, [page, pageSize]);
+    return reports.slice(start, start + pageSize);
+  }, [reports, page, pageSize, groupBy]);
 
   const handlePageSizeChange = (nextPageSize) => {
     setPageSize(nextPageSize);
     setPage(1);
   };
+
+  const activeGroupByLabel = GROUP_BY_OPTIONS.find((o) => o.value === groupBy)?.label;
 
   return (
     <AppLayout activePage="salesReport" onLogout={onLogout} onNavigate={onNavigate} user={user}>
@@ -43,20 +138,57 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
       <main className="flex-1 overflow-y-auto px-3 pb-5 lg:px-5">
         <div className="flex min-h-full flex-col gap-4">
-          <SalesReportFilterBar />
+          <SalesReportFilterBar
+            itemFilter={itemFilter}
+            onItemFilterChange={setItemFilter}
+            rangeFilter={rangeFilter}
+            onRangeFilterChange={setRangeFilter}
+            customFrom={customFrom}
+            onCustomFromChange={setCustomFrom}
+            customTo={customTo}
+            onCustomToChange={setCustomTo}
+            onFilter={fetchReports}
+            onReset={handleReset}
+          />
 
           <section className="rounded-lg border border-[#EAECF3] bg-white p-5 pb-0 shadow-[0_2px_8px_rgba(20,18,56,0.04)]">
             <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <h2 className="text-[17px] font-bold text-[#050A24]">Sales Reports</h2>
-                <p className="mt-1 text-[12px] font-semibold text-[#6D28D9]">Total 14 reports</p>
+                <p className="mt-1 text-[12px] font-semibold text-[#6D28D9]">
+                  {loading ? 'Loading…' : `Total ${reports.length} report${reports.length === 1 ? '' : 's'}`}
+                </p>
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <button className="flex h-9 items-center gap-2 rounded-md border border-[#DDE1EC] bg-white px-4 text-[12px] font-semibold text-[#6D28D9] transition hover:bg-[#F8F5FF]" type="button">
-                  Item Wise
-                  <icons.chevronDown className="h-4 w-4 text-[#98A0B3]" />
-                </button>
+                <div className="relative" ref={groupByRef}>
+                  <button
+                    onClick={() => setGroupByOpen((o) => !o)}
+                    className="flex h-9 items-center gap-2 rounded-md border border-[#DDE1EC] bg-white px-4 text-[12px] font-semibold text-[#6D28D9] transition hover:bg-[#F8F5FF]"
+                    type="button"
+                  >
+                    {activeGroupByLabel}
+                    <icons.chevronDown className="h-4 w-4 text-[#98A0B3]" />
+                  </button>
+
+                  {groupByOpen && (
+                    <div className="absolute right-0 z-10 mt-1 w-36 overflow-hidden rounded-md border border-[#EAECF3] bg-white shadow-lg">
+                      {GROUP_BY_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => { setGroupBy(opt.value); setGroupByOpen(false); setPage(1); }}
+                          className={`block w-full px-4 py-2 text-left text-[12px] font-semibold transition ${
+                            groupBy === opt.value ? 'bg-[#F3ECFF] text-[#6D28D9]' : 'text-[#343B58] hover:bg-[#F8F8FB]'
+                          }`}
+                          type="button"
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <button className="flex h-9 items-center gap-2 rounded-md border border-[#6D31F6] bg-white px-5 text-[12px] font-semibold text-[#6D28D9] transition hover:bg-[#F8F5FF]" type="button">
                   <icons.fileText className="h-4 w-4" />
                   Export to Excel
@@ -64,17 +196,36 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
               </div>
             </div>
 
-            <SalesReportTable reports={visibleReports} />
+            {error && (
+              <div className="mb-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-[12px] font-medium text-red-600">
+                {error}
+                <button onClick={fetchReports} className="ml-2 font-semibold underline" type="button">Retry</button>
+              </div>
+            )}
 
-            <Pagination
-              page={page}
-              totalPages={totalPages}
-              pageSize={pageSize}
-              totalItems={SALES_REPORTS.length}
-              pageSizeOptions={[8, 10, 25]}
-              onPageChange={setPage}
-              onPageSizeChange={handlePageSizeChange}
-            />
+            {loading ? (
+              <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">Loading sales report…</div>
+            ) : reports.length === 0 && !error ? (
+              <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">
+                No sales found for the selected filters.
+              </div>
+            ) : (
+              <>
+                <SalesReportTable reports={visibleReports} groupBy={groupBy} settings={settings} />
+
+                {groupBy === 'item' && (
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    pageSize={pageSize}
+                    totalItems={reports.length}
+                    pageSizeOptions={[8, 10, 25]}
+                    onPageChange={setPage}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
+                )}
+              </>
+            )}
           </section>
         </div>
       </main>
