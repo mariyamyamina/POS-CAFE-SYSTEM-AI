@@ -10,7 +10,8 @@ const TopSellingItems = ({ data = [], onViewAll }) => {
   const items = data.map(item => ({
     name: item.item_name,
     qty: item.total_sold,
-    revenue: item.total_revenue
+    revenue: item.total_revenue,
+    image: item.image_url
   }))
 
   return (
@@ -46,7 +47,15 @@ const TopSellingItems = ({ data = [], onViewAll }) => {
               <div className="flex min-w-0 items-center gap-2">
                 <span className="w-3 text-[12px] font-medium text-text-400">{i + 1}.</span>
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F4F5F9]">
-                  <icons.box className="h-4 w-4 text-text-400" />
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-7 w-7 object-contain"
+                      onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                    />
+                  ) : null}
+                  <icons.logo className="h-5 w-5 text-primary" style={{ display: item.image ? 'none' : 'flex' }} />
                 </div>
                 <span className="truncate text-[10px] font-medium text-text-800">{item.name}</span>
               </div>

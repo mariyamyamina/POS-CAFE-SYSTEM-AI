@@ -106,23 +106,33 @@ def get_top_selling_items(db: Session, limit: int = 5):
     top_items = (
         db.query(
             SalesDtl.item_name,
+            SalesDtl.item_id,
             func.sum(SalesDtl.qty).label('total_sold'),
             func.sum(SalesDtl.total).label('total_revenue')
         )
-        .group_by(SalesDtl.item_name)
+        .group_by(SalesDtl.item_name, SalesDtl.item_id)
         .order_by(func.sum(SalesDtl.qty).desc())
         .limit(limit)
         .all()
     )
     
-    return [
-        {
+    result = []
+    for item in top_items:
+        # Get image URL from inventory if item_id exists
+        image_url = None
+        if item.item_id:
+            inventory_item = db.query(InventoryItem).filter(InventoryItem.id == item.item_id).first()
+            if inventory_item:
+                image_url = inventory_item.image_url
+        
+        result.append({
             "item_name": item.item_name,
             "total_sold": item.total_sold,
-            "total_revenue": float(item.total_revenue)
-        }
-        for item in top_items
-    ]
+            "total_revenue": float(item.total_revenue),
+            "image_url": image_url
+        })
+    
+    return result
 
 
 def get_recent_transactions(db: Session, limit: int = 5):

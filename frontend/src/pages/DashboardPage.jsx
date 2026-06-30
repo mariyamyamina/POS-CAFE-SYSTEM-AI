@@ -14,7 +14,7 @@ const QUICK_ACTIONS = [
     { icon: 'box', label: 'Add Product', bg: '#E9FBF3', color: '#10B981' },
     { icon: 'orders', label: 'New Order', bg: '#FFF1E8', color: '#FF8A3C' },
     { icon: 'users', label: 'Add Customer', bg: '#EAF1FF', color: '#3B82F6' },
-    { icon: 'barChart', label: 'Reports', bg: '#F5F3FF', color: '#7C3AED' },
+    { icon: 'barChart', label: 'Sales Reports', bg: '#F5F3FF', color: '#7C3AED' },
 ];
 
 const stockColor = (level) => {
@@ -112,11 +112,10 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                                                     src={item.image_url}
                                                     alt={item.name}
                                                     className="h-10 w-10 object-contain"
-                                                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; }}
+                                                    onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                                                 />
-                                            ) : (
-                                                <icons.box className="h-6 w-6 text-text-400" />
-                                            )}
+                                            ) : null}
+                                            <icons.logo className="h-8 w-8 text-primary" style={{ display: item.image_url ? 'none' : 'flex' }} />
                                         </div>
                                         <p className="mt-2 truncate text-[11px] font-semibold text-text-800">{item.name}</p>
                                         <p className="text-[10px] text-text-400">{item.unit}</p>

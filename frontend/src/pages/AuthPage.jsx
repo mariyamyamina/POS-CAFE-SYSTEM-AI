@@ -79,8 +79,7 @@ const BrandPanel = () => {
 
   return (
     <aside className="relative hidden min-h-screen overflow-hidden bg-[#090033] text-white lg:block lg:w-1/2">
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1300&q=90')" }} />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,0,45,0.98)_0%,rgba(19,0,90,0.84)_43%,rgba(19,0,90,0.22)_100%)]" />
+      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url(/images/Login.png)" }} />
       <div className="relative z-10 flex min-h-screen max-w-[430px] flex-col justify-center px-14 py-10">
         <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-full bg-primary-600 text-3xl shadow-2xl shadow-primary-900/40 overflow-hidden">
           {settings.logo ? (

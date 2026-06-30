@@ -29,6 +29,7 @@ class TopSellingItem(BaseModel):
     item_name: str
     total_sold: int
     total_revenue: float
+    image_url: Optional[str] = None
 
 
 class RecentTransaction(BaseModel):
