@@ -151,5 +151,34 @@ export const categoriesApi = {
   deleteCategory: (categoryId) => request(`/categories/${categoryId}`, { method: 'DELETE' }),
 };
 
+// Builds a FormData payload from a plain fields object.
+// Skips undefined/null values so partial updates don't overwrite existing
+// backend values with empty strings. Used because inventory create/update
+// sends an optional image file alongside regular fields (multipart, not JSON).
+const buildInventoryFormData = (fields = {}, imageFile) => {
+  const formData = new FormData();
+
+  Object.entries(fields).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    formData.append(key, value);
+  });
+
+  if (imageFile) {
+    formData.append('image', imageFile);
+  }
+
+  return formData;
+};
+
+export const inventoryApi = {
+  getItems: () => request('/inventory'),
+  getItem: (itemId) => request(`/inventory/${itemId}`),
+  createItem: (fields, imageFile) =>
+    request('/inventory', { method: 'POST', body: buildInventoryFormData(fields, imageFile) }),
+  updateItem: (itemId, fields, imageFile) =>
+    request(`/inventory/${itemId}`, { method: 'PUT', body: buildInventoryFormData(fields, imageFile) }),
+  deleteItem: (itemId) => request(`/inventory/${itemId}`, { method: 'DELETE' }),
+};
+
 export { API_BASE_URL, getStoredToken, getStoredRefreshToken, getStoredUser, saveSession, clearSession, request };
 export default request;

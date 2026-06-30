@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { icons } from '../../constants/icons';
 import { FieldError, fieldBorderClass } from '../../hooks/useFormValidation';
+import { categoriesApi, inventoryApi } from '../../api';
 
 /* ─── Validation rules (run live during render) ─────────────────────── */
 const validate = {
@@ -22,9 +23,6 @@ const getItemCode = (item) =>
 const inputCls = (hasErr) => `${BASE_INPUT} ${fieldBorderClass(hasErr)}`;
 
 const selectCls = (hasErr) => `${BASE_SELECT} ${fieldBorderClass(hasErr)}`;
-
-/* ─── Error message ─────────────────────────────────────────────────── */
-const Err = ({ msg }) => <FieldError message={msg} />;
 
 /* ─── Field wrapper ─────────────────────────────────────────────────── */
 const Field = ({ label, required, hint, errMsg, children }) => (
@@ -48,19 +46,25 @@ const SelectInput = ({ value, onChange, onBlur, hasErr, children }) => (
   </div>
 );
 
+// Hardcoded supplier list — no Suppliers module yet, per earlier decision.
+const SUPPLIER_OPTIONS = [
+  { value: 'Main Supplier', label: 'Main Supplier' },
+  { value: 'Beverage Supplier', label: 'Beverage Supplier' },
+  { value: 'Kitchen Supplier', label: 'Kitchen Supplier' },
+];
+
 /* ─── Main form ─────────────────────────────────────────────────────── */
 const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
   const isEdit = mode === 'edit';
 
   const [fields, setFields] = useState({
-    itemName:    item?.name                           || '',
-    category:    item?.category                       || '',
-    price:       item ? String(item.price.toFixed(2)) : '',
-    unit:        item?.unit                           || '',
-    inStock:     item ? String(item.inStock)          : '',
-    status:      item?.status                         || 'Out of Stock',
-    supplier:    '',
-    description: isEdit ? `${item?.name || ''} inventory item` : '',
+    itemName:    item?.name                                   || '',
+    category:    item?.category_id ? String(item.category_id) : '',
+    price:       item ? String(item.price.toFixed(2))         : '',
+    unit:        item?.unit                                   || '',
+    inStock:     item ? String(item.in_stock)                 : '',
+    supplier:    item?.supplier                                || '',
+    description: item?.description                             || '',
   });
 
   // touched: tracks which fields user has blurred
@@ -69,6 +73,27 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
   const [submitted, setSubmitted] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const fileRef = useRef(null);
+
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        const data = await categoriesApi.getCategories();
+        if (isMounted) setCategories(data || []);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      } finally {
+        if (isMounted) setCategoriesLoading(false);
+      }
+    })();
+    return () => { isMounted = false; };
+  }, []);
 
   /* Live error for a field — shown if submitted OR if user has touched that field */
   const e = (field) => {
@@ -79,16 +104,43 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
   const set = (field) => (ev) => setFields((p) => ({ ...p, [field]: ev.target.value }));
   const touch = (field) => () => setTouched((p) => ({ ...p, [field]: true }));
 
-  const handleSubmit = (ev) => {
+  const handleSubmit = async (ev) => {
     ev.preventDefault();
     setSubmitted(true); // ← this triggers re-render; e() will now show ALL errors
-    // Check if there are any actual errors from current field values
+
     const hasErrors = Object.keys(validate).some((f) => validate[f](fields[f]));
-    if (!hasErrors) onSave?.();
+    if (hasErrors) return;
+
+    setSaving(true);
+    setSaveError('');
+
+    const payload = {
+      name: fields.itemName,
+      category_id: Number(fields.category),
+      price: parseFloat(fields.price),
+      unit: fields.unit,
+      description: fields.description || null,
+      in_stock: Number(fields.inStock),
+      purchased: Number(fields.inStock) || 0,
+      supplier: fields.supplier || null,
+    };
+
+    try {
+      if (isEdit) {
+        await inventoryApi.updateItem(item.id, payload, imageFile);
+      } else {
+        await inventoryApi.createItem(payload, imageFile);
+      }
+      onSave?.();
+    } catch (error) {
+      setSaveError(error.message || 'Failed to save item. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Banner: show after submitted AND there are still errors
-  const anyError = submitted && Object.keys(validate).some((f) => validate[f](fields[f]));
+  // Banner: show after submitted AND there are still errors, OR a failed save request
+  const anyError = (submitted && Object.keys(validate).some((f) => validate[f](fields[f]))) || Boolean(saveError);
 
   return (
     <main className="flex-1 overflow-y-auto px-3 pb-5 lg:px-5">
@@ -108,13 +160,13 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
           <div className="mt-4 h-px bg-[#EEF0F5]" />
         </div>
 
-        {/* Error banner — only shown after first submit with errors */}
+        {/* Error banner — shown for validation errors OR a failed save request */}
         {anyError && (
           <div className="mx-auto mt-5 flex max-w-[915px] items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-[12px] font-medium text-red-600">
             <svg className="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
             </svg>
-            Please fill in all required fields marked in red.
+            {saveError || 'Please fill in all required fields marked in red.'}
           </div>
         )}
 
@@ -149,7 +201,7 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
                 <icons.upload className="h-5 w-5" />
               </span>
               <span className="mt-3 text-[12px] font-medium text-[#1F2548]">
-                {imageFile ? imageFile.name : 'Click to upload or drag and drop'}
+                {imageFile ? imageFile.name : isEdit && item?.image_url ? 'Click to replace image' : 'Click to upload or drag and drop'}
               </span>
               <span className="mt-2 text-[10px] font-medium text-[#7C3AED]">PNG, JPG or WEBP (Max. 2MB)</span>
             </button>
@@ -168,12 +220,10 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
           {/* Category */}
           <Field label="Category" required errMsg={e('category')}>
             <SelectInput value={fields.category} onChange={set('category')} onBlur={touch('category')} hasErr={Boolean(e('category'))}>
-              <option value="" disabled>Select category</option>
-              <option value="Beverage">Beverage</option>
-              <option value="Steamed Timsum">Steamed Timsum</option>
-              <option value="Porridge">Porridge</option>
-              <option value="Noodle/Dumplings">Noodle/Dumplings</option>
-              <option value="Bake">Bake</option>
+              <option value="" disabled>{categoriesLoading ? 'Loading categories…' : 'Select category'}</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
             </SelectInput>
           </Field>
 
@@ -225,22 +275,23 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
             </div>
           </Field>
 
-          {/* Status */}
-          <Field label="Status" hint="Status is auto-populated based on In Stock quantity.">
-            <SelectInput value={fields.status} onChange={set('status')} onBlur={() => {}}>
-              <option value="Out of Stock">Out of Stock</option>
-              <option value="Low Stock">Low Stock</option>
-              <option value="In Stock">In Stock</option>
-            </SelectInput>
+
+          {/* Status — informational only, computed server-side from In Stock vs threshold */}
+          <Field label="Status" hint="Status is auto-calculated based on In Stock quantity.">
+            <input
+              className={`${BASE_INPUT} border-[#DDE1EC] bg-[#F9FAFC] text-[#7C3AED]`}
+              value={Number(fields.inStock) === 0 || fields.inStock === '' ? 'Out of Stock' : 'Calculated on save'}
+              readOnly
+            />
           </Field>
 
           {/* Supplier */}
           <Field label="Supplier">
             <SelectInput value={fields.supplier} onChange={set('supplier')} onBlur={() => {}}>
               <option value="" disabled>Select supplier</option>
-              <option value="main">Main Supplier</option>
-              <option value="beverage">Beverage Supplier</option>
-              <option value="kitchen">Kitchen Supplier</option>
+              {SUPPLIER_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
             </SelectInput>
           </Field>
 
@@ -250,15 +301,17 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
               onClick={onCancel}
               className="h-9 min-w-[90px] rounded-md border border-[#CBD2E1] bg-white px-6 text-[12px] font-semibold text-[#111827] transition hover:bg-[#F8F8FB]"
               type="button"
+              disabled={saving}
             >
               Cancel
             </button>
             <button
-              className="flex h-9 min-w-[98px] items-center justify-center gap-2 rounded-md bg-[#6D28D9] px-6 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#5B21B6]"
+              className="flex h-9 min-w-[98px] items-center justify-center gap-2 rounded-md bg-[#6D28D9] px-6 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#5B21B6] disabled:opacity-60"
               type="submit"
+              disabled={saving}
             >
               <icons.save className="h-4 w-4" />
-              Save
+              {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
         </form>

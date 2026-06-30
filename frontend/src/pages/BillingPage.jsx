@@ -8,31 +8,7 @@ import ProductGrid from '../components/Menu/ProductGrid';
 import BottomActions from '../components/Billing/BottomActions';
 import PriceAmendment from '../components/Billing/PriceAmendment';
 
-const MENU_ITEMS = [
-  { id: 101, name: 'Chocolate Milkshake', price: 100.00, category: 'Beverage', image: 'images/chocolate-milkshake.png' },
-  { id: 102, name: 'Hot Chocolate', price: 70.00, category: 'Beverage', image: 'images/hot-chocolate.png' },
-  { id: 103, name: 'Cream Roll', price: 40.00, category: 'Bake', image: 'images/cream-roll.png' },
-  { id: 104, name: 'Smoothie', price: 70.00, category: 'Beverage', image: 'images/smoothie.png' },
-  { id: 105, name: 'Mocktail', price: 40.00, category: 'Beverage', image: 'images/mocktail.png' },
-  { id: 106, name: 'Mojito', price: 30.00, category: 'Beverage', image: 'images/mojito.png' },
-  { id: 107, name: 'Green Tea', price: 14.86, category: 'Beverage', image: 'images/green-tea.png' },
-  { id: 108, name: 'Black Tea', price: 20.00, category: 'Beverage', image: '/images/black-tea.png' },
-  { id: 109, name: 'Masala Tea', price: 40.00, category: 'Beverage', image: '/images/masala-tea.png' },
-  { id: 111, name: 'elaichi tea', price: 29.91, category: 'Beverage', image: 'images/elaichi-tea.png' },
-  { id: 113, name: 'Cappuccino', price: 200.00, category: 'Beverage', image: 'images/Cappuccino.png' },
-  { id: 114, name: 'Almond Milk', price: 80.00, category: 'Beverage', image: 'images/almond-milk.png' },
-  { id: 115, name: 'Ginger Tea', price: 20.00, category: 'Beverage', image: 'images/ginger-tea.png' },
-  { id: 116, name: 'Rice Porridge', price: 50.00, category: 'Porridge', image: 'images/rice-porridge.png' },
-  { id: 117, name: 'Wonton Noodle', price: 30.00, category: 'Noodle/Dumplings', image: 'images/wonton-noodle.png' },
-  { id: 118, name: 'Veg Momos', price: 79.94, category: 'Noodle/Dumplings', image: 'images/veg-momos.png' },
-  { id: 119, name: 'Chicken Momos', price: 119.87, category: 'Noodle/Dumplings', image: 'images/chicken-momos.png' },
-  { id: 120, name: 'Paneer Momos', price: 99.87, category: 'Noodle/Dumplings', image: 'images/paneer-momos.png' },
-  { id: 121, name: 'Chicken Bun', price: 120, category: 'Bake', image: 'images/chicken-bun.png' },
-  { id: 122, name: 'Paneer Bun', price: 70.87, category: 'Bake', image: 'images/paneer-bun.png' },
-  { id: 123, name: 'Veg Bun', price: 50, category: 'Bake', image: 'images/veg-bun.png' },
-  { id: 124, name: 'Veg Puff', price: 20, category: 'Steamed Bun', image: 'images/veg-puff.png' },
-  { id: 125, name: 'egg puff', price: 30, category: 'Steamed Bun', image: 'images/egg-puff.png' },
-];
+import { inventoryApi, categoriesApi } from '../api';
 
 const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [billItems, setBillItems]           = useState([]);
@@ -45,7 +21,29 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [searchQuery, setSearchQuery]       = useState('');
   const [viewMode, setViewMode]             = useState('grid');
   const [showPriceAmendment, setShowPriceAmendment] = useState(false);
+  const [menuItems, setMenuItems]           = useState([]);
   const [mobileTab, setMobileTab]           = useState('menu');
+
+  React.useEffect(() => {
+    Promise.all([inventoryApi.getItems(), categoriesApi.getCategories()])
+      .then(([itemsData, catsData]) => {
+        const catMap = catsData.reduce((acc, cat) => {
+          acc[cat.id] = cat.name;
+          return acc;
+        }, {});
+        
+        // Filter out inactive items if needed, or show all
+        const mappedItems = itemsData
+          .filter(item => item.is_active)
+          .map(item => ({
+            ...item,
+            category: catMap[item.category_id] || 'Unknown',
+            image: item.image_url
+          }));
+        setMenuItems(mappedItems);
+      })
+      .catch(err => console.error('Failed to load menu items', err));
+  }, []);
 
   const totalAmount = billItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
@@ -62,7 +60,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const handleManualAdd = () => {
     if (!itemNumberInput.trim()) return;
-    const matched = MENU_ITEMS.find((item) => item.id === parseInt(itemNumberInput.trim(), 10));
+    const matched = menuItems.find((item) => item.id === parseInt(itemNumberInput.trim(), 10));
     if (matched) { handleAddItemToBill(matched, quantityInput); setItemNumberInput(''); setQuantityInput(1); }
   };
 
@@ -175,7 +173,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
             {/* Product grid — natural height, scrolls with page */}
             <ProductGrid
-              items={MENU_ITEMS}
+              items={menuItems}
               billItems={billItems}
               onAddItem={(item) => handleAddItemToBill(item, 1)}
               selectedCategory={selectedCategory}
@@ -242,7 +240,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
             <div className="flex min-h-0 flex-col overflow-hidden rounded-md border border-[#EEF0F6] bg-white">
               <ProductGrid
-                items={MENU_ITEMS} billItems={billItems}
+                items={menuItems} billItems={billItems}
                 onAddItem={(item) => handleAddItemToBill(item, 1)}
                 selectedCategory={selectedCategory} searchQuery={searchQuery} viewMode={viewMode}
               />

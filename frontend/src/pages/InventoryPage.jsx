@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import AppLayout from '../layout/AppLayout';
 import PageNavbar from '../components/common/PageNavbar';
 import Pagination from '../components/common/Pagination';
@@ -6,33 +6,93 @@ import InventoryFilterBar from '../components/Inventory/InventoryFilterBar';
 import InventoryTable from '../components/Inventory/InventoryTable';
 import InventoryItemForm from '../components/Inventory/InventoryItemForm';
 import { icons } from '../constants/icons';
+import { inventoryApi } from '../api';
 
-const INVENTORY_ITEMS = [
-  { id: 1, icon: '☕', name: 'Coffee Black', category: 'Beverage', price: 3.00, unit: 'Cup', purchased: 150, sold: 98, inStock: 52, status: 'In Stock', lastUpdated: '28 May 2026, 10:40 AM' },
-  { id: 2, icon: '🍵', name: 'Tea C', category: 'Beverage', price: 4.70, unit: 'Cup', purchased: 200, sold: 150, inStock: 50, status: 'In Stock', lastUpdated: '28 May 2026, 10:55 AM' },
-  { id: 3, icon: '🥟', name: 'Steamed Dimsum', category: 'Steamed Timsum', price: 7.30, unit: 'Pcs', purchased: 120, sold: 80, inStock: 40, status: 'In Stock', lastUpdated: '28 May 2026, 10:10 AM' },
-  { id: 4, icon: '🥣', name: 'Porridge', category: 'Porridge', price: 11.20, unit: 'Bowl', purchased: 100, sold: 90, inStock: 10, status: 'Low Stock', lastUpdated: '28 May 2026, 10:30 AM' },
-  { id: 5, icon: '🥤', name: 'Iced Tea', category: 'Beverage', price: 11.70, unit: 'Glass', purchased: 180, sold: 170, inStock: 10, status: 'Low Stock', lastUpdated: '28 May 2026, 10:15 AM' },
-  { id: 6, icon: '🥟', name: 'Dumplings', category: 'Noodle/Dumplings', price: 16.10, unit: 'Pcs', purchased: 80, sold: 70, inStock: 10, status: 'Low Stock', lastUpdated: '29 May 2026, 10:05 AM' },
-  { id: 7, icon: '☕', name: 'Iced Coffee', category: 'Beverage', price: 13.50, unit: 'Glass', purchased: 160, sold: 160, inStock: 0, status: 'Out of Stock', lastUpdated: '29 May 2026, 10:00 AM' },
-  { id: 8, icon: '☕', name: 'Coffee C', category: 'Beverage', price: 16.50, unit: 'Cup', purchased: 140, sold: 140, inStock: 0, status: 'Out of Stock', lastUpdated: '29 May 2026, 09:45 AM' },
-  { id: 9, icon: '🥛', name: 'Milo', category: 'Beverage', price: 15.00, unit: 'Cup', purchased: 60, sold: 45, inStock: 15, status: 'In Stock', lastUpdated: '29 May 2026, 09:50 AM' },
-  { id: 10, icon: '🍵', name: 'Chinese Tea', category: 'Beverage', price: 4.20, unit: 'Cup', purchased: 90, sold: 60, inStock: 30, status: 'In Stock', lastUpdated: '30 May 2026, 09:25 AM' },
-  { id: 11, icon: '🍹', name: 'Lemon Tea', category: 'Beverage', price: 5.10, unit: 'Glass', purchased: 70, sold: 58, inStock: 12, status: 'In Stock', lastUpdated: '30 May 2026, 09:35 AM' },
-  { id: 12, icon: '🥢', name: 'Wonton Noodle', category: 'Noodle/Dumplings', price: 12.40, unit: 'Bowl', purchased: 95, sold: 88, inStock: 7, status: 'Low Stock', lastUpdated: '30 May 2026, 09:55 AM' },
-  { id: 13, icon: '🍮', name: 'Egg Tart', category: 'Bake', price: 6.80, unit: 'Pcs', purchased: 110, sold: 99, inStock: 11, status: 'In Stock', lastUpdated: '30 May 2026, 10:05 AM' },
-];
+const DEFAULT_FILTERS = {
+  categoryId: 'all',
+  search: '',
+  status: 'all',
+  dateFrom: '',
+  dateTo: '',
+};
 
 const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [formMode, setFormMode] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  const totalPages = Math.ceil(INVENTORY_ITEMS.length / pageSize);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await inventoryApi.getItems();
+      setItems(data || []);
+    } catch (err) {
+      console.error('Failed to load inventory:', err);
+      setError(err.message || 'Failed to load inventory items.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  // ── Client-side filtering ─────────────────────────────────────────────────
+  const filteredItems = useMemo(() => {
+    let result = [...items];
+
+    if (filters.categoryId !== 'all') {
+      result = result.filter((item) => String(item.category_id) === filters.categoryId);
+    }
+
+    if (filters.search.trim()) {
+      const term = filters.search.trim().toLowerCase();
+      result = result.filter((item) => item.name.toLowerCase().includes(term));
+    }
+
+    if (filters.status !== 'all') {
+      result = result.filter((item) => item.status === filters.status);
+    }
+
+    if (filters.dateFrom) {
+      const from = new Date(filters.dateFrom);
+      result = result.filter((item) => new Date(item.updated_at) >= from);
+    }
+
+    if (filters.dateTo) {
+      // Include the full day by setting time to end-of-day
+      const to = new Date(filters.dateTo);
+      to.setHours(23, 59, 59, 999);
+      result = result.filter((item) => new Date(item.updated_at) <= to);
+    }
+
+    return result;
+  }, [items, filters]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+
   const visibleItems = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return INVENTORY_ITEMS.slice(start, start + pageSize);
-  }, [page, pageSize]);
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, page, pageSize]);
+
+  const handleFilterChange = (nextFilters) => {
+    setFilters(nextFilters);
+    setPage(1); // reset to page 1 on every filter change
+  };
+
+  const handleReset = () => {
+    setFilters(DEFAULT_FILTERS);
+    setPage(1);
+  };
 
   const handlePageSizeChange = (nextPageSize) => {
     setPageSize(nextPageSize);
@@ -54,6 +114,13 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     setFormMode(null);
   };
 
+  // Called by InventoryItemForm's onSave — refetches the full list so the
+  // new/edited item (and its server-computed status) shows up immediately.
+  const handleFormSaved = () => {
+    handleCloseForm();
+    fetchItems();
+  };
+
   return (
     <AppLayout activePage="inventory" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Inventory" onToggleSidebar={onToggleSidebar} />
@@ -63,18 +130,26 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
           mode={formMode}
           item={selectedItem}
           onCancel={handleCloseForm}
-          onSave={handleCloseForm}
+          onSave={handleFormSaved}
         />
       ) : (
         <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-4">
           <div className="flex min-h-full flex-col gap-3">
-            <InventoryFilterBar />
+            <InventoryFilterBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onReset={handleReset}
+            />
 
             <section className="rounded-lg border border-[#EAECF3] bg-white p-4 pb-0 shadow-[0_2px_8px_rgba(20,18,56,0.04)]">
               <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h2 className="text-[15px] font-bold text-black">Inventory List</h2>
-                  <p className="mt-1 text-[11px] font-semibold text-[#6D28D9]">Total 13 items found</p>
+                  <p className="mt-1 text-[11px] font-semibold text-[#6D28D9]">
+                    {loading
+                      ? 'Loading…'
+                      : `Showing ${filteredItems.length} of ${items.length} item${items.length === 1 ? '' : 's'}`}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -96,16 +171,35 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                 </div>
               </div>
 
-              <InventoryTable items={visibleItems} onEditItem={handleEditItem} />
+              {error && (
+                <div className="mb-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-[12px] font-medium text-red-600">
+                  {error}
+                  <button onClick={fetchItems} className="ml-2 font-semibold underline" type="button">Retry</button>
+                </div>
+              )}
 
-              <Pagination
-                page={page}
-                totalPages={totalPages}
-                pageSize={pageSize}
-                totalItems={INVENTORY_ITEMS.length}
-                onPageChange={setPage}
-                onPageSizeChange={handlePageSizeChange}
-              />
+              {loading ? (
+                <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">Loading inventory…</div>
+              ) : filteredItems.length === 0 && !error ? (
+                <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">
+                  {items.length === 0
+                    ? 'No inventory items yet. Click "Add Item" to create your first one.'
+                    : 'No items match the current filters.'}
+                </div>
+              ) : (
+                <>
+                  <InventoryTable items={visibleItems} onEditItem={handleEditItem} />
+
+                  <Pagination
+                    page={page}
+                    totalPages={totalPages}
+                    pageSize={pageSize}
+                    totalItems={filteredItems.length}
+                    onPageChange={setPage}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
+                </>
+              )}
             </section>
           </div>
         </main>

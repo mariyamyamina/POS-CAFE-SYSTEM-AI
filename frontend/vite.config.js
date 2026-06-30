@@ -20,6 +20,18 @@ export default defineConfig({
         target: 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
+      '/inventory': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+      },
+      '/roles': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+      },
       '/health': {
         target: 'http://127.0.0.1:8080',
         changeOrigin: true,

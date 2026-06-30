@@ -19,9 +19,11 @@ def _build_engine():
 engine = _build_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base.metadata.create_all(bind=engine)
+# ⚠️  Models MUST be imported before create_all so SQLAlchemy
+#     knows about every table when it scans Base.metadata.
+from app import models  # noqa: F401  (registers all ORM classes)
 
-from app import models  # noqa: F401
+Base.metadata.create_all(bind=engine)
 
 
 def get_db():
