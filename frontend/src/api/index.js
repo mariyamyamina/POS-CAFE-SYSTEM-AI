@@ -225,4 +225,9 @@ export const itemRequestApi = {
     request(`/api/item-requests/${requestId}`, {
       method: 'DELETE',
     }),
+    receiveRequest(id) {
+    return request(`/item-requests/${id}/receive`, {
+        method: "PUT",
+    });
+},
 };

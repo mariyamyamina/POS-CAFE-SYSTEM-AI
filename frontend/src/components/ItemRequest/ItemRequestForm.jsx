@@ -5,21 +5,21 @@ import { inventoryApi, itemRequestApi } from '../../api';
 
 /* ─── Validation rules ──────────────────────────────────────────────── */
 const headerValidate = {
-  subject:          (v) => v.trim() ? '' : 'Subject is required.',
-  requestedDate:    (v) => v        ? '' : 'Requested date is required.',
-  expectedDelivery: (v) => v        ? '' : 'Expected delivery date is required.',
+  subject: (v) => v.trim() ? '' : 'Subject is required.',
+  requestedDate: (v) => v ? '' : 'Requested date is required.',
+  expectedDelivery: (v) => v ? '' : 'Expected delivery date is required.',
 };
 const lineValidate = {
-  itemId:   (v) => v             ? '' : 'Please select an item.',
+  itemId: (v) => v ? '' : 'Please select an item.',
   quantity: (v) => Number(v) > 0 ? '' : 'Quantity must be at least 1.',
-  itemDate: (v) => v             ? '' : 'Date is required.',
+  itemDate: (v) => v ? '' : 'Date is required.',
 };
 
 /* ─── Base classes ──────────────────────────────────────────────────── */
 const BASE = 'h-[36px] w-full rounded-md border bg-white px-3 text-[12px] font-medium text-[#10112B] outline-none transition placeholder:text-[#9AA1B4]';
 const BASE_SEL = `${BASE} appearance-none pr-9 text-[#7C3AED]`;
 
-const inputCls  = (hasErr) => `${BASE} ${fieldBorderClass(hasErr)}`;
+const inputCls = (hasErr) => `${BASE} ${fieldBorderClass(hasErr)}`;
 const selectCls = (hasErr) => `${BASE_SEL} ${fieldBorderClass(hasErr)}`;
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
@@ -68,10 +68,11 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
   const isEdit = mode === 'edit';
 
   const [fields, setFields] = useState({
-    subject:          isEdit ? request.subject          : '',
-    requestedDate:    isEdit ? request.requested_date    : todayISO(),
+    subject: isEdit ? request.subject : '',
+    requestedBy: isEdit ? request.requested_by_name : 'Current User',
+    requestedDate: isEdit ? request.requested_date : todayISO(),
     expectedDelivery: isEdit ? request.expected_delivery || '' : '',
-    status:           isEdit ? request.status            : 'Pending',
+    status: 'Pending',
   });
 
   const [lines, setLines] = useState(() => {
@@ -164,10 +165,8 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
       const payload = buildPayload();
 
       if (isEdit) {
-        // Editing always goes through the update endpoint — status is taken
-        // from the form's Status dropdown, not re-derived from Save/Submit
-        await itemRequestApi.updateRequest(request.id, { ...payload, status: fields.status });
-      } else if (action === 'submit') {
+        await itemRequestApi.updateRequest(request.id, payload);
+      } else if (action === "submit") {
         await itemRequestApi.submitRequest(payload);
       } else {
         await itemRequestApi.saveRequest(payload);
@@ -175,7 +174,49 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
 
       onSave?.();
     } catch (error) {
-      setSaveError(error.message || 'Failed to save request. Please try again.');
+      setSaveError(error.message || "Failed to save request.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this item request?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setSaving(true);
+
+      await itemRequestApi.deleteRequest(request.id);
+
+      onSave?.(); // Refresh the list and close the form
+    } catch (error) {
+      setSaveError(error.message || "Failed to delete request.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    const confirmed = window.confirm(
+      "Are you sure you want to cancel this request?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setSaving(true);
+
+      await itemRequestApi.updateRequest(request.id, {
+        status: "Cancelled",
+      });
+
+      onSave?.(); // refresh list & close form
+    } catch (error) {
+      setSaveError(error.message || "Failed to cancel request.");
     } finally {
       setSaving(false);
     }
@@ -222,6 +263,14 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
               />
             </Field>
 
+            <Field label="Requested By">
+              <input
+                className={`${BASE} border-[#DDE1EC] bg-[#F9FAFC] text-[#7C3AED]`}
+                value={fields.requestedBy}
+                readOnly
+              />
+            </Field>
+
             <Field label="Requested Date" errMsg={he('requestedDate')}>
               <DateInput
                 value={fields.requestedDate}
@@ -240,16 +289,15 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
               />
             </Field>
 
-            {/* Status — only meaningful/editable when editing an existing request */}
-            {isEdit && (
-              <Field label="Status">
-                <SelectInput value={fields.status} onChange={setF('status')} onBlur={() => {}}>
-                  <option value="Pending">Pending</option>
-                  <option value="On the way">On the way</option>
-                  <option value="Cancelled">Cancelled</option>
-                </SelectInput>
-              </Field>
-            )}
+            <Field label="Status">
+              <input
+                className={`${BASE} border-[#DDE1EC] bg-[#F9FAFC] text-[#7C3AED]`}
+                value={isEdit ? request.status : "Pending"}
+                readOnly
+              />
+            </Field>
+
+
           </div>
         </section>
 
@@ -333,9 +381,28 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
           </div>
 
           <div className="flex flex-wrap justify-center gap-3 border-t border-[#EAECF3] px-6 py-5">
-            <button onClick={onCancel} disabled={saving} className="h-10 min-w-[90px] rounded-md border border-[#CBD2E1] bg-white px-6 text-[13px] font-semibold text-[#111827] transition hover:bg-[#F8F8FB] disabled:opacity-60" type="button">
+
+            <button
+              type="button"
+              onClick={isEdit ? handleCancelRequest : onCancel}
+              disabled={saving}
+              className="h-10 min-w-[90px] rounded-md border border-[#CBD2E1] bg-white px-6 text-[13px] font-semibold text-[#111827]"
+            >
               Cancel
             </button>
+
+
+            {isEdit && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={saving}
+                className="flex h-10 min-w-[100px] items-center justify-center gap-2 rounded-md border border-red-300 bg-red-50 px-6 text-[13px] font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-60"
+              >
+                <icons.trash className="h-4 w-4" />
+                Delete
+              </button>
+            )}
 
             {/* Save / Submit only meaningfully differ on create — editing always just saves via PUT */}
             <button
@@ -357,6 +424,9 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
                 <icons.send className="h-4 w-4" /> {saving ? 'Submitting…' : 'Submit Request'}
               </button>
             )}
+
+
+
           </div>
         </section>
       </div>

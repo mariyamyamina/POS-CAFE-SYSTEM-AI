@@ -12,6 +12,7 @@ from app.crud.item_request import (
     get_item_requests,
     update_item_request,
     delete_item_request,
+    receive_item_request,
 )
 from app.crud.inventory import get_item as get_inventory_item
 from app.schemas.item_request import ItemRequestCreate, ItemRequestUpdate, ItemRequestResponse
@@ -111,3 +112,15 @@ def delete_existing_item_request(request_id: int, db: Session = Depends(get_db))
     if not deleted:
         raise HTTPException(status_code=404, detail="Item request not found")
     return {"message": "Item request deleted successfully"}
+
+@router.put("/item-requests/{request_id}/receive", response_model=ItemRequestResponse)
+def receive_existing_item_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+):
+    hdr = receive_item_request(db, request_id)
+
+    if not hdr:
+        raise HTTPException(status_code=404, detail="Item request not found")
+
+    return _to_response(hdr)

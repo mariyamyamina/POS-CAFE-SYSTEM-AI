@@ -6,6 +6,7 @@ const statusStyles = {
   'On the way': 'border-[#93C5FD] bg-[#DBEAFE] text-[#1155CC]',
   Pending: 'border-[#FACC15] bg-[#FEF3C7] text-[#B77900]',
   Cancelled: 'border-[#FCA5A5] bg-[#FEE2E2] text-[#DC2626]',
+  Received: "border-[#86EFAC] bg-[#DCFCE7] text-[#15803D]",
 };
 
 const headers = [
