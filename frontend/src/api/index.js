@@ -200,6 +200,7 @@ export const salesApi = {
 
 export const dashboardApi = {
   getDashboardData: () => request('/api/dashboard'),
+  getTopSellingItems: (period) => request(`/api/dashboard/top-selling-items?period=${period}`),
 };
 
 
@@ -230,4 +231,14 @@ export const itemRequestApi = {
         method: "PUT",
     });
 },
+};
+
+
+export const reservedBillApi = {
+  // Save current bill items as a reserved bill
+  reserveBill: (payload) => request('/api/reserved-bills', { method: 'POST', body: payload }),
+  // Get all reserved (not-yet-restored) bills for the "Reserved Bills" popup
+  getReservedBills: () => request('/api/reserved-bills'),
+  // Mark a reserved bill as restored (backend sets restored = true)
+  restoreBill: (billId) => request(`/api/reserved-bills/${billId}/restore`, { method: 'PUT' }),
 };

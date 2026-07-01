@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
 from app.core.database import Base, engine, SessionLocal
+from app.api import reserved_bill
 
 # ---------------------------
 # Import ALL models
@@ -134,6 +135,7 @@ app.include_router(inventory_router)
 app.include_router(sales_router)
 app.include_router(dashboard_router)
 app.include_router(item_request.router, prefix="/api", tags=["Item Request"])
+app.include_router(reserved_bill.router, tags=["Reserved Bills"])
 
 # Static uploads
 os.makedirs("uploads/inventory", exist_ok=True)

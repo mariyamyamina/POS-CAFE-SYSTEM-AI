@@ -17,7 +17,7 @@ const BillTable = ({ items = [], onRemoveItem, selectedItemId, onSelectItem }) =
             <div className="mb-4 flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-[#F2F1F6] text-primary">
               <icons.itemRequest className="h-6 w-6" />
             </div>
-            <h3 className="text-[17px] font-bold text-text-700">No items added yet</h3>
+            <h3 className="text-[15px] font-bold text-text-700">No items added yet</h3>
             <p className="mt-2 text-[12px] font-medium text-text-500">
               Select items from the menu to add to the bill
             </p>
@@ -32,28 +32,26 @@ const BillTable = ({ items = [], onRemoveItem, selectedItemId, onSelectItem }) =
                 <div
                   key={item.id}
                   onClick={() => onSelectItem && onSelectItem(item.id)}
-                  className={`group grid grid-cols-[2fr_0.75fr_1fr_1fr] items-center gap-2 px-4 py-1 cursor-pointer transition-colors hover:bg-text-50 ${
-                    isSelected ? 'bg-primary/5 ring-1 ring-inset ring-primary/40' : ''
-                  }`}
+                  className={`group grid grid-cols-[2fr_0.75fr_1fr_1fr] items-center gap-2 px-4 py-1 cursor-pointer transition-colors hover:bg-text-50 ${isSelected ? 'bg-primary/5 ring-1 ring-inset ring-primary/40' : ''
+                    }`}
                 >
-                  <div className="flex min-w-0 items-center gap-3 pr-2">
-                    {imageUrl && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#F4F5F9] overflow-hidden">
-                        <img 
-                          src={imageUrl} 
-                          alt={item.name} 
-                          className="h-8 w-8 object-contain object-center"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <span className="block truncate text-[11px] font-semibold text-text-900 pt-1">{item.name}</span>
-                      <span className="text-[10px] font-medium text-text-400">{item.id % 100}</span>
-                    </div>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#F4F5F9] overflow-hidden">
+                    {imageUrl ? (
+                      <img
+                        src={imageUrl}
+                        alt={item.name}
+                        className="h-8 w-8 object-contain object-center"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <icons.logo
+                      className="h-5 w-5 text-primary"
+                      style={{ display: imageUrl ? 'none' : 'flex' }}
+                    />
                   </div>
                   <div className="flex justify-center">
                     <div className="flex h-7 w-8 items-center justify-center rounded-md border border-text-200 text-xs font-bold text-text-900">

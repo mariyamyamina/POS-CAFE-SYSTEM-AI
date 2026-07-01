@@ -8,10 +8,11 @@ import ProductGrid from '../components/Menu/ProductGrid';
 import BottomActions from '../components/Billing/BottomActions';
 import PriceAmendment from '../components/Billing/PriceAmendment';
 import Toast from '../components/common/Toast';
-import { inventoryApi, categoriesApi, salesApi, settingsApi } from '../api';
 import { printBill } from '../utils/printBill';
 import { useConfirm } from '../context/ConfirmContext';
 import { icons } from '../constants/icons';
+import { inventoryApi, categoriesApi, salesApi, settingsApi, reservedBillApi } from '../api';
+import ReservedBillsModal from '../components/Billing/ReservedBillsModal';
 
 const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const confirm = useConfirm();
@@ -28,6 +29,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [showPriceAmendment, setShowPriceAmendment] = useState(false);
   const [menuItems, setMenuItems] = useState([]);
   const [mobileTab, setMobileTab] = useState('menu');
+  const [showReservedModal, setShowReservedModal] = useState(false);
 
   // ── New state for the bill-row selection, tender input, and toast ──
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -62,13 +64,13 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     const idx = billItems.findIndex((bi) => bi.id === item.id);
     const currentQtyInBill = idx !== -1 ? billItems[idx].quantity : 0;
     const totalRequestedQty = currentQtyInBill + qty;
-    
+
     // Check if sufficient stock is available
     if (totalRequestedQty > item.in_stock) {
       showToast(`Only ${item.in_stock} ${item.name} available in stock`);
       return;
     }
-    
+
     if (idx !== -1) {
       const updated = [...billItems];
       updated[idx].quantity += qty;
@@ -91,7 +93,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const handleUpdateQuantity = (id, newQty) => {
     if (newQty <= 0) { handleRemoveItem(id); return; }
-    
+
     // Check if sufficient stock is available
     const item = billItems.find((i) => i.id === id);
     const menuItem = menuItems.find((m) => m.id === id);
@@ -99,7 +101,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       showToast(`Only ${menuItem.in_stock} ${menuItem.name} available in stock`);
       return;
     }
-    
+
     setBillItems(billItems.map((item) => item.id === id ? { ...item, quantity: newQty } : item));
   };
 
@@ -121,62 +123,62 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const GST_RATE = 0.07;
 
-const handlePrint = async () => {
-      if (!showPriceAmendment) {
-        showToast('Print is only available in Price Amendment');
-        return;
-      }
- 
-      if (billItems.length === 0) {
-        showToast('Add items to the bill before printing');
-        return;
-      }
- 
-      const gstAmount = totalAmount * GST_RATE;
-      const payable = totalAmount + gstAmount;
-      const tenderNum = parseFloat(tender) || 0;
- 
-      if (tenderNum < payable) {
-        showToast('Tender amount must be greater than or equal to payable amount');
-        return;
-      }
- 
+  const handlePrint = async () => {
+    if (!showPriceAmendment) {
+      showToast('Print is only available in Price Amendment');
+      return;
+    }
+
+    if (billItems.length === 0) {
+      showToast('Add items to the bill before printing');
+      return;
+    }
+
+    const gstAmount = totalAmount * GST_RATE;
+    const payable = totalAmount + gstAmount;
+    const tenderNum = parseFloat(tender) || 0;
+
+    if (tenderNum < payable) {
+      showToast('Tender amount must be greater than or equal to payable amount');
+      return;
+    }
+
+    try {
+      const payload = {
+        table_no: tableNumber || undefined,
+        cover_no: covers ? parseInt(covers, 10) : undefined,
+        total_amt: totalAmount,
+        gst: gstAmount,
+        payable: payable,
+        tender: tenderNum,
+        change_amt: tenderNum - payable,
+        items: billItems.map((item) => ({
+          item_id: item.id,
+          item_name: item.name,
+          qty: item.quantity,
+          unit_price: item.unitPrice,
+        })),
+      };
+
+      // createSale returns the full SaleResponse (id, bill_no, items, etc.)
+      // — this is what printBill needs, not a separately-built paymentData object
+      const sale = await salesApi.createSale(payload);
+
+      // Best-effort: bill still prints with a fallback cafe name if this fails
+      let settings = null;
       try {
-        const payload = {
-          table_no: tableNumber || undefined,
-          cover_no: covers ? parseInt(covers, 10) : undefined,
-          total_amt: totalAmount,
-          gst: gstAmount,
-          payable: payable,
-          tender: tenderNum,
-          change_amt: tenderNum - payable,
-          items: billItems.map((item) => ({
-            item_id: item.id,
-            item_name: item.name,
-            qty: item.quantity,
-            unit_price: item.unitPrice,
-          })),
-        };
- 
-        // createSale returns the full SaleResponse (id, bill_no, items, etc.)
-        // — this is what printBill needs, not a separately-built paymentData object
-        const sale = await salesApi.createSale(payload);
- 
-        // Best-effort: bill still prints with a fallback cafe name if this fails
-        let settings = null;
-        try {
-          settings = await settingsApi.getSettings();
-        } catch (err) {
-          console.error('Failed to load settings for print:', err);
-        }
- 
-        printBill(sale, settings);
-        resetBillState();
-      } catch (error) {
-        console.error('Failed to create sale:', error);
-        showToast(error.message || 'Failed to save sale. Please try again.');
+        settings = await settingsApi.getSettings();
+      } catch (err) {
+        console.error('Failed to load settings for print:', err);
       }
-    };
+
+      printBill(sale, settings);
+      resetBillState();
+    } catch (error) {
+      console.error('Failed to create sale:', error);
+      showToast(error.message || 'Failed to save sale. Please try again.');
+    }
+  };
 
   const handlePriceAmendment = async () => {
     if (totalAmount === 0) {
@@ -220,14 +222,14 @@ const handlePrint = async () => {
     }
     const target = billItems.find((i) => i.id === selectedItemId);
     if (!target) return;
-    
+
     // Check if sufficient stock is available before adding
     const menuItem = menuItems.find((m) => m.id === selectedItemId);
     if (menuItem && target.quantity + 1 > menuItem.in_stock) {
       showToast(`Only ${menuItem.in_stock} ${menuItem.name} available in stock`);
       return;
     }
-    
+
     handleUpdateQuantity(selectedItemId, target.quantity + 1);
   };
 
@@ -265,7 +267,25 @@ const handlePrint = async () => {
     });
     if (!ok) return;
 
-    // TODO: persist reserved bill once a Reserved Transactions store/API exists
+    try {
+      await reservedBillApi.reserveBill({
+        table_number: tableNumber || undefined,
+        covers: covers || undefined,
+        total: totalAmount,
+        items: billItems.map((item) => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          image: item.image,
+        })),
+      });
+      resetBillState();
+      showToast('Bill reserved successfully');
+    } catch (error) {
+      console.error('Failed to reserve bill:', error);
+      showToast(error.message || 'Failed to reserve bill. Please try again.');
+    }
   };
 
   const handleDeleteAllTransaction = async () => {
@@ -287,17 +307,24 @@ const handlePrint = async () => {
     setSelectedItemId(null);
   };
 
-  const handleRestore = async () => {
-    const ok = await confirm({
-      icon: icons.rotateCcw,
-      title: 'Restore Transaction',
-      message: 'Restore the last reserved bill to the current screen?',
-      confirmLabel: 'Restore',
-      confirmVariant: 'primary',
-    });
-    if (!ok) return;
+  const handleRestore = () => {
+    setShowReservedModal(true);
+  };
 
-    // TODO: restore logic once a Reserved Transactions store/API exists
+  const handleBillRestored = (bill) => {
+    setBillItems(
+      bill.items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        image: item.image,
+      }))
+    );
+    setTableNumber(bill.table_number || '');
+    setCovers(bill.covers || '');
+    setShowReservedModal(false);
+    showToast(`Bill ID ${bill.id} restored`);
   };
 
   const handleMainMenu = () => { onNavigate && onNavigate('dashboard'); };
@@ -436,6 +463,13 @@ const handlePrint = async () => {
 
       <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
 
+      <ReservedBillsModal
+        open={showReservedModal}
+        onClose={() => setShowReservedModal(false)}
+        onRestore={handleBillRestored}
+      />
+
+      <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </AppLayout>
   );
 };

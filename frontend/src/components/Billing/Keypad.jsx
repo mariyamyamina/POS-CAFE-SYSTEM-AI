@@ -41,14 +41,14 @@ const Keypad = ({
     if (updateFn) updateFn("");
   };
 
-  const handleClearLast = () => {
-    const activeVal = activeField === "table" ? tableNumber
-      : activeField === "covers" ? covers : itemNumber;
-    const updateFn = activeField === "table" ? onTableNumberChange
-      : activeField === "covers" ? onCoversChange : onItemNumberChange;
-    if (updateFn) updateFn(activeVal.slice(0, -1));
+  const handleClearAll = () => {
+    if (onTableNumberChange) onTableNumberChange("");
+    if (onCoversChange) onCoversChange("");
+    if (onItemNumberChange) onItemNumberChange("");
+    if (onQuantityChange) onQuantityChange(1);
   };
 
+ 
   return (
     <div className="flex-shrink-0 pt-1.5 sm:pt-2 pl-2 sm:pl-3 pr-2 overflow-hidden" style={{ background: '#F9FAFB' }}>
       <div className="bg-white rounded-md p-1.5 sm:p-2 pt-2 sm:pt-3 flex flex-col gap-1.5 sm:gap-2 overflow-hidden">
@@ -185,7 +185,7 @@ const Keypad = ({
             <button onClick={handleAC} type="button" className="w-full h-7 sm:h-8 rounded-md text-white text-[9px] sm:text-[10px] font-semibold" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
               AC
             </button>
-            <button onClick={handleClearLast} type="button" className="w-full h-7 sm:h-8 rounded-md text-white text-[9px] sm:text-[10px] font-semibold" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
+            <button onClick={handleClearAll} type="button" className="w-full h-7 sm:h-8 rounded-md text-white text-[9px] sm:text-[10px] font-semibold" style={{ background: 'linear-gradient(135deg, #7C3AED, #6D28D9)' }}>
               Clear
             </button>
           </div>
