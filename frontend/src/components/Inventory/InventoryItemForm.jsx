@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { icons } from '../../constants/icons';
 import { FieldError, fieldBorderClass } from '../../hooks/useFormValidation';
 import { categoriesApi, inventoryApi } from '../../api';
+import { useConfirm } from '../../context/ConfirmContext';
 
 /* ─── Validation rules (run live during render) ─────────────────────── */
 const validate = {
@@ -56,6 +57,7 @@ const SUPPLIER_OPTIONS = [
 /* ─── Main form ─────────────────────────────────────────────────────── */
 const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
   const isEdit = mode === 'edit';
+  const confirm = useConfirm();
 
   const [fields, setFields] = useState({
     itemName:    item?.name                                   || '',
@@ -111,6 +113,17 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
     const hasErrors = Object.keys(validate).some((f) => validate[f](fields[f]));
     if (hasErrors) return;
 
+    const ok = await confirm({
+      icon: icons.save,
+      title: isEdit ? 'Update Item?' : 'Add New Item?',
+      message: isEdit
+        ? 'Save changes to this inventory item?'
+        : 'Add this item to your inventory?',
+      confirmLabel: isEdit ? 'Update' : 'Add Item',
+      confirmVariant: 'success',
+    });
+    if (!ok) return;
+
     setSaving(true);
     setSaveError('');
 
@@ -139,6 +152,16 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
     }
   };
 
+  const handleCancelClick = async () => {
+    const ok = await confirm({
+      title: 'Discard Changes?',
+      message: 'Any unsaved changes to this item will be lost.',
+      confirmLabel: 'Discard',
+      confirmVariant: 'danger',
+    });
+    if (ok) onCancel?.();
+  };
+
   // Banner: show after submitted AND there are still errors, OR a failed save request
   const anyError = (submitted && Object.keys(validate).some((f) => validate[f](fields[f]))) || Boolean(saveError);
 
@@ -146,7 +169,7 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
     <main className="flex-1 overflow-y-auto px-3 pb-5 lg:px-5">
       {/* Breadcrumb */}
       <div className="mb-4 flex items-center gap-2 text-[12px] font-medium">
-        <button onClick={onCancel} className="text-[#6D28D9]" type="button">Inventory</button>
+        <button onClick={handleCancelClick} className="text-[#6D28D9]" type="button">Inventory</button>
         <span className="text-[#9CA3B8]">&gt;</span>
         <span className="text-[#26305F]">{isEdit ? 'Edit Inventory' : 'Add Inventory'}</span>
       </div>
@@ -298,7 +321,7 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
           {/* Actions */}
           <div className="flex justify-center gap-3 pt-1 xl:col-span-2">
             <button
-              onClick={onCancel}
+              onClick={handleCancelClick}
               className="h-9 min-w-[90px] rounded-md border border-[#CBD2E1] bg-white px-6 text-[12px] font-semibold text-[#111827] transition hover:bg-[#F8F8FB]"
               type="button"
               disabled={saving}

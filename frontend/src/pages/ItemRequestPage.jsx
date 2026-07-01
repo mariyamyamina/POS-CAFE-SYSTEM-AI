@@ -28,6 +28,18 @@ const formatDateTime = (isoDateTime) => {
   }
 };
 
+const applyFilters = (requests, filters) => {
+  if (!filters) return requests;
+  return requests.filter((r) => {
+    if (filters.requestId && String(r.request_no ?? r.id) !== filters.requestId) return false;
+    if (filters.subject && !String(r.subject || '').toLowerCase().includes(filters.subject.toLowerCase())) return false;
+    if (filters.requestedBy && r.requested_by_name !== filters.requestedBy) return false;
+    if (filters.dateFrom && r.requested_date < filters.dateFrom) return false;
+    if (filters.dateTo && r.requested_date > filters.dateTo) return false;
+    return true;
+  });
+};
+
 const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,13 +50,20 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [formMode, setFormMode] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
 
+  // null = no filter applied (show everything). Set by the filter bar,
+  // re-applied automatically whenever `requests` refetches.
+  const [filters, setFilters] = useState(null);
+
+  const filteredRequests = useMemo(
+    () => applyFilters(requests, filters),
+    [requests, filters]
+  );
+
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const data = await itemRequestApi.getRequests();
-      console.log("API Response:", data);
-console.log("Is Array:", Array.isArray(data));
       setRequests(data || []);
     } catch (err) {
       console.error('Failed to load item requests:', err);
@@ -58,20 +77,31 @@ console.log("Is Array:", Array.isArray(data));
     fetchRequests();
   }, [fetchRequests]);
 
-  const totalPages = Math.max(1, Math.ceil(requests.length / pageSize));
+  const handleFilter = (nextFilters) => {
+    setFilters(nextFilters);
+    setPage(1);
+  };
+
+  const handleReset = () => {
+    setFilters(null);
+    setPage(1);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / pageSize));
 
   // Maps backend ItemRequestResponse shape -> the display shape ItemRequestTable expects
   const visibleRequests = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return requests.slice(start, start + pageSize).map((r) => ({
+    return filteredRequests.slice(start, start + pageSize).map((r) => ({
       id: r.id,
+      requestId: r.request_no ?? r.id,
       subject: r.subject,
       requestedBy: r.requested_by_name || `User #${r.requested_by}`,
       requestedDate: formatDateTime(r.created_at),
       expectingDelivery: formatDate(r.expected_delivery),
       status: r.status,
     }));
-  }, [requests, page, pageSize]);
+  }, [filteredRequests, page, pageSize]);
 
   const handlePageSizeChange = (nextPageSize) => {
     setPageSize(nextPageSize);
@@ -101,6 +131,10 @@ console.log("Is Array:", Array.isArray(data));
     fetchRequests();
   };
 
+  const emptyStateMessage = requests.length === 0
+    ? 'No item requests yet. Click "New Item Request" to create one.'
+    : 'No item requests match the current filters.';
+
   return (
     <AppLayout activePage="itemRequest" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Item Request" onToggleSidebar={onToggleSidebar} />
@@ -115,7 +149,7 @@ console.log("Is Array:", Array.isArray(data));
       ) : (
         <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-5">
           <div className="flex min-h-full flex-col gap-4">
-            <ItemRequestFilterBar />
+            <ItemRequestFilterBar requests={requests} onFilter={handleFilter} onReset={handleReset} />
 
             <section className="rounded-lg border border-[#EAECF3] bg-white p-5 pb-0 shadow-[0_2px_8px_rgba(20,18,56,0.04)]">
               <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -150,9 +184,9 @@ console.log("Is Array:", Array.isArray(data));
 
               {loading ? (
                 <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">Loading item requests…</div>
-              ) : requests.length === 0 && !error ? (
+              ) : filteredRequests.length === 0 && !error ? (
                 <div className="py-10 text-center text-[12px] font-medium text-[#6D28D9]">
-                  No item requests yet. Click "New Item Request" to create one.
+                  {emptyStateMessage}
                 </div>
               ) : (
                 <>
@@ -162,7 +196,7 @@ console.log("Is Array:", Array.isArray(data));
                     page={page}
                     totalPages={totalPages}
                     pageSize={pageSize}
-                    totalItems={requests.length}
+                    totalItems={filteredRequests.length}
                     pageSizeOptions={[5, 10, 25]}
                     onPageChange={setPage}
                     onPageSizeChange={handlePageSizeChange}

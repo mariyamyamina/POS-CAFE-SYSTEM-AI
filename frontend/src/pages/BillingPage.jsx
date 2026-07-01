@@ -10,8 +10,12 @@ import PriceAmendment from '../components/Billing/PriceAmendment';
 import Toast from '../components/common/Toast';
 import { inventoryApi, categoriesApi, salesApi, settingsApi } from '../api';
 import { printBill } from '../utils/printBill';
+import { useConfirm } from '../context/ConfirmContext';
+import { icons } from '../constants/icons';
 
 const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
+  const confirm = useConfirm();
+
   const [billItems, setBillItems] = useState([]);
   const [itemNumberInput, setItemNumberInput] = useState('');
   const [quantityInput, setQuantityInput] = useState(1);
@@ -99,9 +103,20 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     setBillItems(billItems.map((item) => item.id === id ? { ...item, quantity: newQty } : item));
   };
 
-  const handleNewBill = () => {
+  const resetBillState = () => {
     setBillItems([]); setTableNumber(''); setCovers(''); setItemNumberInput(''); setQuantityInput(1);
     setShowPriceAmendment(false); setSelectedItemId(null); setTender('');
+  };
+
+  const handleNewBill = async () => {
+    const ok = await confirm({
+      icon: icons.plus,
+      title: 'Create New Bill',
+      message: 'Are you sure you want to create a new bill? Current bill will be cleared.',
+      confirmLabel: 'Create',
+      confirmVariant: 'success',
+    });
+    if (ok) resetBillState();
   };
 
   const GST_RATE = 0.07;
@@ -156,16 +171,21 @@ const handlePrint = async () => {
         }
  
         printBill(sale, settings);
-        handleNewBill();
+        resetBillState();
       } catch (error) {
         console.error('Failed to create sale:', error);
         showToast(error.message || 'Failed to save sale. Please try again.');
       }
     };
 
-  const handlePriceAmendment = () => {
+  const handlePriceAmendment = async () => {
     if (totalAmount === 0) {
-      showToast('Add items to the bill before price amendment');
+      await confirm({
+        title: 'Empty Bill',
+        message: 'No items found. Please add items to continue billing.',
+        confirmLabel: 'OK',
+        confirmVariant: 'neutral',
+      });
       return;
     }
     setShowPriceAmendment(true);
@@ -211,18 +231,75 @@ const handlePrint = async () => {
     handleUpdateQuantity(selectedItemId, target.quantity + 1);
   };
 
-  const handleTerminateTransaction = () => {
+  const handleTerminateTransaction = async () => {
     if (!showPriceAmendment) {
       showToast('Terminate can only happen in Price Amendment');
       return;
     }
+
+    const ok = await confirm({
+      icon: icons.close,
+      title: 'Terminate Transaction',
+      message: 'Are you sure you want to terminate this bill?',
+      confirmLabel: 'Terminate',
+      confirmVariant: 'danger',
+    });
+    if (!ok) return;
+
     setShowPriceAmendment(false);
     setTender('');
   };
 
-  const handleReservedTransaction = () => { };
-  const handleDeleteAllTransaction = () => { if (billItems.length > 0) setBillItems([]); setSelectedItemId(null); };
-  const handleRestore = () => { };
+  const handleReservedTransaction = async () => {
+    if (billItems.length === 0) {
+      showToast('Add items to the bill before reserving');
+      return;
+    }
+
+    const ok = await confirm({
+      icon: icons.itemRequest,
+      title: 'Reserve Transaction',
+      message: 'Are you sure you want to reserve this bill for later?',
+      confirmLabel: 'Reserve',
+      confirmVariant: 'success',
+    });
+    if (!ok) return;
+
+    // TODO: persist reserved bill once a Reserved Transactions store/API exists
+  };
+
+  const handleDeleteAllTransaction = async () => {
+    if (billItems.length === 0) {
+      showToast('Bill is already empty');
+      return;
+    }
+
+    const ok = await confirm({
+      icon: icons.trash,
+      title: 'Delete All Transaction',
+      message: 'This will remove all items from the current bill. This action cannot be undone.',
+      confirmLabel: 'Delete All',
+      confirmVariant: 'danger',
+    });
+    if (!ok) return;
+
+    setBillItems([]);
+    setSelectedItemId(null);
+  };
+
+  const handleRestore = async () => {
+    const ok = await confirm({
+      icon: icons.rotateCcw,
+      title: 'Restore Transaction',
+      message: 'Restore the last reserved bill to the current screen?',
+      confirmLabel: 'Restore',
+      confirmVariant: 'primary',
+    });
+    if (!ok) return;
+
+    // TODO: restore logic once a Reserved Transactions store/API exists
+  };
+
   const handleMainMenu = () => { onNavigate && onNavigate('dashboard'); };
 
   const bottomActionProps = {

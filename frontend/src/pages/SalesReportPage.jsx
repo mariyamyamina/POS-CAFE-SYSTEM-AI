@@ -73,17 +73,24 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     });
   }, []);
 
-  const fetchReports = useCallback(async () => {
+  const fetchReports = useCallback(async (overrides = {}) => {
+    // overrides lets Reset pass fresh values directly instead of relying on
+    // state that hasn't flushed yet on the same tick as setItemFilter(''), etc.
+    const effectiveItemFilter = overrides.itemFilter ?? itemFilter;
+    const effectiveRangeFilter = overrides.rangeFilter ?? rangeFilter;
+    const effectiveCustomFrom = overrides.customFrom ?? customFrom;
+    const effectiveCustomTo = overrides.customTo ?? customTo;
+
     setLoading(true);
     setError('');
     try {
-      const dates = rangeFilter === 'Custom'
-        ? { date_from: customFrom || undefined, date_to: customTo || undefined }
-        : rangeToDates(rangeFilter);
+      const dates = effectiveRangeFilter === 'Custom'
+        ? { date_from: effectiveCustomFrom || undefined, date_to: effectiveCustomTo || undefined }
+        : rangeToDates(effectiveRangeFilter);
 
       const data = await salesApi.getSalesReport({
         ...dates,
-        item_name: itemFilter || undefined,
+        item_name: effectiveItemFilter || undefined,
       });
       // Map snake_case API fields to the camelCase shape SalesReportTable expects
       const mapped = (data || []).map((r) => ({
@@ -104,15 +111,21 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     }
   }, [rangeFilter, customFrom, customTo, itemFilter]);
 
+  // Fetch once on mount only — NOT on every filter-field change (typing in
+  // Item, clicking a date range button, etc. just updates local state).
+  // The Filter button (onFilter={fetchReports}) and Reset button are the
+  // only things that trigger a refetch after that.
   useEffect(() => {
     fetchReports();
-  }, [fetchReports]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleReset = () => {
     setItemFilter('');
     setRangeFilter('Today');
     setCustomFrom('');
     setCustomTo('');
+    fetchReports({ itemFilter: '', rangeFilter: 'Today', customFrom: '', customTo: '' });
   };
 
   const totalPages = Math.max(1, Math.ceil(reports.length / pageSize));
@@ -147,7 +160,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
             onCustomFromChange={setCustomFrom}
             customTo={customTo}
             onCustomToChange={setCustomTo}
-            onFilter={fetchReports}
+            onFilter={() => fetchReports()}
             onReset={handleReset}
           />
 
@@ -199,7 +212,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
             {error && (
               <div className="mb-4 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-[12px] font-medium text-red-600">
                 {error}
-                <button onClick={fetchReports} className="ml-2 font-semibold underline" type="button">Retry</button>
+                <button onClick={() => fetchReports()} className="ml-2 font-semibold underline" type="button">Retry</button>
               </div>
             )}
 

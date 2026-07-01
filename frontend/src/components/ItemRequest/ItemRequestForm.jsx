@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { icons } from '../../constants/icons';
 import { FieldError, fieldBorderClass } from '../../hooks/useFormValidation';
 import { inventoryApi, itemRequestApi } from '../../api';
+import { useConfirm } from '../../context/ConfirmContext';
 
 /* ─── Validation rules ──────────────────────────────────────────────── */
 const headerValidate = {
@@ -66,6 +67,7 @@ const makeEmptyLine = () => ({
 /* ─── Main form ─────────────────────────────────────────────────────── */
 const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
   const isEdit = mode === 'edit';
+  const confirm = useConfirm();
 
   const [fields, setFields] = useState({
     subject: isEdit ? request.subject : '',
@@ -158,6 +160,20 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
     setSubmitted(true);
     if (!validateAll()) return;
 
+    const isSubmit = action === 'submit';
+    const ok = await confirm({
+      icon: isSubmit ? icons.send : icons.save,
+      title: isSubmit ? 'Submit Request?' : isEdit ? 'Save Changes?' : 'Save as Pending?',
+      message: isSubmit
+        ? 'Submit this item request for approval?'
+        : isEdit
+          ? 'Save changes to this item request?'
+          : 'Save this request as pending? You can submit it later.',
+      confirmLabel: isSubmit ? 'Submit' : 'Save',
+      confirmVariant: isSubmit ? 'success' : 'primary',
+    });
+    if (!ok) return;
+
     setSaving(true);
     setSaveError('');
 
@@ -180,18 +196,23 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
     }
   };
 
-  const handleDelete = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this item request?"
-    );
+  const handleCancelClick = () => {
+    onCancel?.();
+  };
 
-    if (!confirmed) return;
+  const handleDelete = async () => {
+    const ok = await confirm({
+      icon: icons.trash,
+      title: 'Delete Request?',
+      message: 'Are you sure you want to delete this item request? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      confirmVariant: 'danger',
+    });
+    if (!ok) return;
 
     try {
       setSaving(true);
-
       await itemRequestApi.deleteRequest(request.id);
-
       onSave?.(); // Refresh the list and close the form
     } catch (error) {
       setSaveError(error.message || "Failed to delete request.");
@@ -201,19 +222,20 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
   };
 
   const handleCancelRequest = async () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to cancel this request?"
-    );
-
-    if (!confirmed) return;
+    const ok = await confirm({
+      icon: icons.close,
+      title: 'Cancel Request?',
+      message: 'Are you sure you want to cancel this request?',
+      confirmLabel: 'Cancel Request',
+      confirmVariant: 'danger',
+    });
+    if (!ok) return;
 
     try {
       setSaving(true);
-
       await itemRequestApi.updateRequest(request.id, {
         status: "Cancelled",
       });
-
       onSave?.(); // refresh list & close form
     } catch (error) {
       setSaveError(error.message || "Failed to cancel request.");
@@ -229,7 +251,7 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
   return (
     <main className="flex-1 overflow-y-auto px-3 pb-5 lg:px-5">
       <div className="mb-5 flex items-center gap-2 text-[12px] font-medium">
-        <button onClick={onCancel} className="text-[#6D28D9]" type="button">Item Request</button>
+        <button onClick={handleCancelClick} className="text-[#6D28D9]" type="button">Item Request</button>
         <span className="text-[#9CA3B8]">&gt;</span>
         <span className="text-[#26305F]">{isEdit ? 'Edit Request' : 'Add Request'}</span>
       </div>
@@ -384,13 +406,23 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
 
             <button
               type="button"
-              onClick={isEdit ? handleCancelRequest : onCancel}
+              onClick={handleCancelClick}
               disabled={saving}
               className="h-10 min-w-[90px] rounded-md border border-[#CBD2E1] bg-white px-6 text-[13px] font-semibold text-[#111827]"
             >
               Cancel
             </button>
 
+            {isEdit && (
+              <button
+                type="button"
+                onClick={handleCancelRequest}
+                disabled={saving}
+                className="h-10 min-w-[120px] rounded-md border border-red-300 bg-red-50 px-6 text-[13px] font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-60"
+              >
+                Cancel Request
+              </button>
+            )}
 
             {isEdit && (
               <button

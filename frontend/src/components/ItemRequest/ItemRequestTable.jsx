@@ -10,7 +10,7 @@ const statusStyles = {
 };
 
 const headers = [
-  { key: 'id', label: 'Request ID', sortable: true },
+  { key: 'requestId', label: 'Request ID', sortable: true },
   { key: 'subject', label: 'Subject', sortable: true },
   { key: 'requestedBy', label: 'Requested By', sortable: true },
   { key: 'requestedDate', label: 'Requested Date', sortable: true },
@@ -60,7 +60,7 @@ const ItemRequestTable = ({ items, onEditRequest }) => {
           <tbody>
             {sortedItems.map((item) => (
               <tr key={item.id} className="h-[65px] border-b border-[#F1F2F7] text-[12px] font-medium text-[#050A24] last:border-b-0">
-                <td className="px-4 font-semibold text-[#6D28D9]">{item.id}</td>
+                <td className="px-4 font-semibold text-[#6D28D9]">{item.requestId ?? item.id}</td>
                 <td className="max-w-[290px] whitespace-pre-line px-4 leading-5">{item.subject}</td>
                 <td className="whitespace-pre-line px-4 leading-5">{item.requestedBy}</td>
                 <td className="whitespace-pre-line px-4 leading-5">{item.requestedDate}</td>

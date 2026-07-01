@@ -45,9 +45,19 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     fetchItems();
   }, [fetchItems]);
 
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const aTime = new Date(a.created_at || a.updated_at || 0).getTime();
+      const bTime = new Date(b.created_at || b.updated_at || 0).getTime();
+
+      if (aTime !== bTime) return bTime - aTime;
+      return Number(b.id ?? 0) - Number(a.id ?? 0);
+    });
+  }, [items]);
+
   // ── Client-side filtering ─────────────────────────────────────────────────
   const filteredItems = useMemo(() => {
-    let result = [...items];
+    let result = [...sortedItems];
 
     if (filters.categoryId !== 'all') {
       result = result.filter((item) => String(item.category_id) === filters.categoryId);
@@ -75,7 +85,7 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     }
 
     return result;
-  }, [items, filters]);
+  }, [sortedItems, filters]);
 
   const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
 
