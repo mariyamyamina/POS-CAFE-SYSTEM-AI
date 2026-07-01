@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { icons } from '../../constants/icons';
-import { categoriesApi } from '../../api';
+import { categoriesApi, inventoryApi } from '../../api';
 
 const FieldWrapper = ({ label, children }) => (
   <label className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -18,11 +18,17 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const InventoryFilterBar = ({ filters, onFilterChange, onReset }) => {
   const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
   const [localFilters, setLocalFilters] = useState(filters);
 
   // Load real categories from backend
   useEffect(() => {
     categoriesApi.getCategories().then((data) => setCategories(data || [])).catch(() => {});
+  }, []);
+
+  // Load inventory items from backend
+  useEffect(() => {
+    inventoryApi.getItems().then((data) => setItems(data || [])).catch(() => {});
   }, []);
 
   // Sync local state if parent resets filters
@@ -58,12 +64,17 @@ const InventoryFilterBar = ({ filters, onFilterChange, onReset }) => {
         <FieldWrapper label="Item Name">
           <div className="relative">
             <icons.fileText className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#17213D]" />
-            <input
-              className={`${inputClass} pl-8`}
-              placeholder="Search item name…"
-              value={localFilters?.search ?? ''}
-              onChange={set('search')}
-            />
+            <select
+              className={`${selectClass} pl-8`}
+              value={localFilters?.itemId ?? 'all'}
+              onChange={set('itemId')}
+            >
+              <option value="all">All Items</option>
+              {items.map((item) => (
+                <option key={item.id} value={String(item.id)}>{item.name}</option>
+              ))}
+            </select>
+            <icons.chevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#5E667D]" />
           </div>
         </FieldWrapper>
 

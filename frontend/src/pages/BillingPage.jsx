@@ -30,6 +30,8 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [menuItems, setMenuItems] = useState([]);
   const [mobileTab, setMobileTab] = useState('menu');
   const [showReservedModal, setShowReservedModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // ── New state for the bill-row selection, tender input, and toast ──
   const [selectedItemId, setSelectedItemId] = useState(null);
@@ -46,6 +48,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
         const mappedItems = itemsData
           .filter(item => item.is_active)
+          .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) // Sort by created_at ascending
           .map(item => ({
             ...item,
             category: catMap[item.category_id] || 'Unknown',
@@ -55,6 +58,11 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       })
       .catch(err => console.error('Failed to load menu items', err));
   }, []);
+
+  // Reset page when category or search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery]);
 
   const totalAmount = billItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
 
@@ -82,8 +90,28 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const handleManualAdd = () => {
     if (!itemNumberInput.trim()) return;
-    const matched = menuItems.find((item) => item.id === parseInt(itemNumberInput.trim(), 10));
-    if (matched) { handleAddItemToBill(matched, quantityInput); setItemNumberInput(''); setQuantityInput(1); }
+
+    // Filter items based on category and search (same logic as ProductGrid)
+    const filteredItems = menuItems.filter((item) => {
+      const matchesCategory = selectedCategory === "All Items" || item.category === selectedCategory;
+      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+
+    // Paginate items (same logic as ProductGrid)
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
+
+    // Find item by display number (1-based index in paginated list)
+    const itemNumber = parseInt(itemNumberInput.trim(), 10);
+    if (itemNumber >= 1 && itemNumber <= paginatedItems.length) {
+      const matched = paginatedItems[itemNumber - 1];
+      handleAddItemToBill(matched, quantityInput);
+      setItemNumberInput('');
+      setQuantityInput(1);
+    } else {
+      showToast(`Item number ${itemNumber} not found on current page`);
+    }
   };
 
   const handleRemoveItem = (id) => {
@@ -423,6 +451,8 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
               selectedCategory={selectedCategory}
               searchQuery={searchQuery}
               viewMode={viewMode}
+              currentPage={currentPage}
+              onPageChange={setCurrentPage}
             />
             <BottomActions {...bottomActionProps} />
           </div>
@@ -454,6 +484,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                 items={menuItems} billItems={billItems}
                 onAddItem={(item) => handleAddItemToBill(item, 1)}
                 selectedCategory={selectedCategory} searchQuery={searchQuery} viewMode={viewMode}
+                currentPage={currentPage} onPageChange={setCurrentPage}
               />
             </div>
           </div>

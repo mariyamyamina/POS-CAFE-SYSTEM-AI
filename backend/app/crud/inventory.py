@@ -49,7 +49,7 @@ def get_items(db: Session, skip: int = 0, limit: int = 100, include_inactive: bo
     query = db.query(InventoryItem).options(joinedload(InventoryItem.category))
     if not include_inactive:
         query = query.filter(InventoryItem.is_active == True)  # noqa: E712
-    return query.offset(skip).limit(limit).all()
+    return query.order_by(InventoryItem.created_at.desc()).offset(skip).limit(limit).all()
 
 
 def get_item(db: Session, item_id: int, include_inactive: bool = False):

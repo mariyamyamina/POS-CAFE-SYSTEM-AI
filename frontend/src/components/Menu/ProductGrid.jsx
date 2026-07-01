@@ -8,9 +8,10 @@ const ProductGrid = ({
   onAddItem,
   selectedCategory = "All Items",
   searchQuery = "",
-  viewMode = "grid"
+  viewMode = "grid",
+  currentPage = 1,
+  onPageChange = null
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
   const filteredItems = items.filter((item) => {
@@ -18,10 +19,6 @@ const ProductGrid = ({
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [selectedCategory, searchQuery]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -44,9 +41,10 @@ const ProductGrid = ({
               ? "grid h-full grid-cols-4 grid-rows-5 gap-2"
               : "flex h-full flex-col gap-2 overflow-y-auto scrollbar-hide"
           }>
-            {paginatedItems.map((item) => {
+            {paginatedItems.map((item, index) => {
               const billItem = billItems.find(b => b.id === item.id);
               const quantity = billItem ? billItem.quantity : 0;
+              const itemNumber = viewMode === "grid" ? startIndex + index + 1 : null;
               return (
                 <ProductCard
                   key={item.id}
@@ -54,6 +52,7 @@ const ProductGrid = ({
                   quantity={quantity}
                   onAdd={onAddItem}
                   viewMode={viewMode}
+                  itemNumber={itemNumber}
                 />
               );
             })}
@@ -70,7 +69,7 @@ const ProductGrid = ({
             return (
               <button
                 key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
+                onClick={() => onPageChange && onPageChange(pageNum)}
                 type="button"
                 className={`h-2.5 rounded-full transition-all duration-200 ${
                   isActive ? 'w-2.5 bg-primary' : 'w-2.5 bg-text-200 hover:bg-text-300'

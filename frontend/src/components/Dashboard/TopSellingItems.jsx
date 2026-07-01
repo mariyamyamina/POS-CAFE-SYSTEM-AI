@@ -1,13 +1,10 @@
-import { useState } from 'react'
 import { icons } from '../../constants/icons'
 
-const FILTERS = ['This Week', 'This Month']
+const FILTERS = ['This Week', 'Last Week', 'This Month']
 
-const TopSellingItems = ({ data = [], onViewAll }) => {
-  const [filter, setFilter] = useState('This Week')
-
+const TopSellingItems = ({ data = [], loading = false, onViewAll, selectedFilter = 'This Week', onFilterChange }) => {
   // Map API data to component format
-  const items = data.map(item => ({
+  const items = (data || []).map(item => ({
     name: item.item_name,
     qty: item.total_sold,
     revenue: item.total_revenue,
@@ -20,8 +17,8 @@ const TopSellingItems = ({ data = [], onViewAll }) => {
         <h3 className="text-[15px] font-bold text-text-900">Top Selling Items</h3>
         <div className="relative">
           <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            value={selectedFilter}
+            onChange={(e) => onFilterChange?.(e.target.value)}
             className="appearance-none rounded-md border border-text-100 bg-white pl-2.5 pr-7 py-1.5 text-[11px] font-medium text-text-600 outline-none cursor-pointer hover:bg-text-50"
           >
             {FILTERS.map((f) => (
@@ -39,7 +36,9 @@ const TopSellingItems = ({ data = [], onViewAll }) => {
       </div>
 
       <div className="mt-1 flex-1 divide-y divide-text-100">
-        {items.length === 0 ? (
+        {loading ? (
+          <div className="text-center text-text-400 py-4">Loading...</div>
+        ) : items.length === 0 ? (
           <div className="text-center text-text-400 py-4">No sales data yet</div>
         ) : (
           items.map((item, i) => (
@@ -60,7 +59,7 @@ const TopSellingItems = ({ data = [], onViewAll }) => {
                 <span className="truncate text-[10px] font-medium text-text-800">{item.name}</span>
               </div>
               <span className="text-center text-[10px] font-semibold text-text-700">{item.qty}</span>
-              <span className="text-right text-[10px] font-semibold text-text-900">{item.revenue.toFixed(2)}</span>
+              <span className="text-right text-[10px] font-semibold text-text-900">{Number(item.revenue ?? 0).toFixed(2)}</span>
             </div>
           ))
         )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AppLayout from '../layout/AppLayout';
 import DashboardHeader from '../components/Dashboard/DashboardHeader';
 import StatCard from '../components/Dashboard/StatCard';
@@ -8,6 +8,12 @@ import RecentTransactions from '../components/Dashboard/RecentTransactions';
 import { icons } from '../constants/icons';
 import { useSettings } from '../context/SettingsContext';
 import { dashboardApi } from '../api';
+
+const FILTER_TO_PERIOD = {
+    'This Week': 'this_week',
+    'Last Week': 'last_week',
+    'This Month': 'this_month',
+};
 
 const QUICK_ACTIONS = [
     { icon: 'fileText', label: 'New Bill', bg: '#F5F3FF', color: '#7C3AED' },
@@ -28,9 +34,18 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const [topSellingFilter, setTopSellingFilter] = useState('This Week');
+    const [topSellingItems, setTopSellingItems] = useState([]);
+    const [topSellingLoading, setTopSellingLoading] = useState(true);
+
     useEffect(() => {
         loadDashboardData();
     }, []);
+
+    useEffect(() => {
+        loadTopSellingItems(topSellingFilter);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [topSellingFilter]);
 
     const loadDashboardData = async () => {
         try {
@@ -44,6 +59,20 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
         }
     };
 
+    const loadTopSellingItems = useCallback(async (filterLabel) => {
+        const period = FILTER_TO_PERIOD[filterLabel] || 'this_week';
+        try {
+            setTopSellingLoading(true);
+            const data = await dashboardApi.getTopSellingItems(period);
+            setTopSellingItems(data);
+        } catch (error) {
+            console.error('Failed to load top selling items:', error);
+            setTopSellingItems([]);
+        } finally {
+            setTopSellingLoading(false);
+        }
+    }, []);
+
     const statCards = dashboardData ? [
         { icon: 'sales', iconBg: '#F5F3FF', iconColor: '#7C3AED', label: 'Total Sales', value: dashboardData.stats.total_sales.toFixed(2), change: '+0%', trend: 'up' },
         { icon: 'orders', iconBg: '#FFF1E8', iconColor: '#FF8A3C', label: 'Total Orders', value: dashboardData.stats.total_orders, change: '+0%', trend: 'up' },
@@ -53,14 +82,13 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     ] : [];
 
     const lowStockItems = dashboardData?.low_stock_items || [];
-    
+
     return (
         <AppLayout activePage="dashboard" onLogout={onLogout} onNavigate={onNavigate} user={user}>
             <DashboardHeader onToggleSidebar={onToggleSidebar} user={user} />
 
             <div className="flex-1 overflow-y-auto bg-[#F8F8FB] px-4 py-4 lg:px-6 scrollbar-thin">
 
-                {/* Stat cards row */}
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     {loading ? (
                         <div className="col-span-full text-center text-text-400">Loading...</div>
@@ -71,17 +99,20 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                     )}
                 </div>
 
-                {/* Main grid: Sales Overview | Top Selling | Recent Transactions */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.4fr_1.1fr_1.1fr]">
                     <SalesOverviewChart data={dashboardData?.sales_overview || []} />
-                    <TopSellingItems data={dashboardData?.top_selling_items || []} onViewAll={() => onNavigate && onNavigate('inventory')} />
+                    <TopSellingItems
+                        data={topSellingItems}
+                        loading={topSellingLoading}
+                        selectedFilter={topSellingFilter}
+                        onFilterChange={setTopSellingFilter}
+                        onViewAll={() => onNavigate && onNavigate('inventory')}
+                    />
                     <RecentTransactions data={dashboardData?.recent_transactions || []} onViewAll={() => onNavigate && onNavigate('salesReport')} />
                 </div>
 
-                {/* Bottom row: Low Stock Alerts | Quick Actions */}
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.7fr_1fr]">
 
-                    {/* Low Stock Alerts */}
                     <div className="rounded-xl border border-text-100 bg-white p-4">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -126,7 +157,6 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                         </div>
                     </div>
 
-                    {/* Quick Actions */}
                     <div className="rounded-xl border border-text-100 bg-white p-4">
                         <h3 className="text-[15px] font-bold text-text-900">Quick Actions</h3>
 
@@ -153,7 +183,6 @@ const DashboardPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                     </div>
                 </div>
 
-                {/* Footer */}
                 <div className="mt-4 flex flex-col items-center justify-between gap-1 text-[11px] text-text-400 sm:flex-row">
                     <span>©2026 {settings.cafe_name}. All rights reserved.</span>
                     <span>

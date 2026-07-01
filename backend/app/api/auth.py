@@ -32,11 +32,46 @@ from app.schemas.auth import (
 from app.api.deps import get_current_user, require_admin
 from app.models.user import User
 
+
+def _build_permissions_list(user: User) -> list[str]:
+    permissions = getattr(user, "permissions", None) or {}
+    if isinstance(permissions, dict):
+        normalized = []
+        permission_map = {
+            "itemRequest": "item_request",
+            "salesReport": "sales",
+        }
+        for name, enabled in permissions.items():
+            if not enabled:
+                continue
+            normalized.append(permission_map.get(name, name))
+
+        if not normalized and getattr(user, "role", None) == "Admin":
+            normalized = [
+                "dashboard",
+                "billing",
+                "inventory",
+                "item_request",
+                "sales",
+                "users",
+                "settings",
+                "help",
+            ]
+        elif getattr(user, "role", None) == "Admin" and "help" not in normalized:
+            normalized.append("help")
+
+        return normalized
+    return []
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _issue_token_pair(db: Session, user: User) -> TokenPair:
-    access_token = create_access_token(user.id)
+    access_token = create_access_token(
+        user.id,
+        role=user.role,
+        permissions=_build_permissions_list(user),
+    )
     refresh_token = create_refresh_token(user.id)
     set_refresh_token(db, user, refresh_token)
     return TokenPair(
@@ -100,7 +135,11 @@ def refresh_access_token(payload: RefreshRequest, db: Session = Depends(get_db))
     if not user or user.refresh_token != payload.refresh_token:
         raise invalid_exc
 
-    new_access_token = create_access_token(user.id)
+    new_access_token = create_access_token(
+        user.id,
+        role=user.role,
+        permissions=_build_permissions_list(user),
+    )
     return AccessTokenOut(access_token=new_access_token)
 
 

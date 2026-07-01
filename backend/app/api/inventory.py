@@ -17,6 +17,7 @@ from app.crud.inventory import (
 from app.crud.category import get_category
 from app.crud.settings import get_settings  # existing settings CRUD, holds low_stock_threshold
 from app.schemas.inventory import InventoryItemResponse
+from app.api.deps import get_current_user
 
 router = APIRouter()
 
@@ -28,7 +29,7 @@ def _low_stock_threshold(db: Session) -> int:
 
 
 @router.get("/api/inventory", response_model=List[InventoryItemResponse])
-def get_all_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_all_items(current_user = Depends(get_current_user), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get all active inventory items."""
     threshold = _low_stock_threshold(db)
     items = get_items(db, skip=skip, limit=limit)
@@ -36,7 +37,7 @@ def get_all_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 
 
 @router.get("/api/inventory/{item_id}", response_model=InventoryItemResponse)
-def get_item_by_id(item_id: int, db: Session = Depends(get_db)):
+def get_item_by_id(item_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get a single inventory item by ID."""
     item = get_item(db, item_id)
     if not item:
@@ -56,6 +57,7 @@ def create_new_item(
     purchased: int = Form(0),
     supplier: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
@@ -101,6 +103,7 @@ def update_existing_item(
     purchased: Optional[int] = Form(None),
     supplier: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """Update an existing inventory item. Only provided fields are changed."""
@@ -140,7 +143,7 @@ def update_existing_item(
 
 
 @router.delete("/api/inventory/{item_id}")
-def delete_existing_item(item_id: int, db: Session = Depends(get_db)):
+def delete_existing_item(item_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Soft delete an inventory item (sets is_active=False, row is kept)."""
     deleted = soft_delete_item(db, item_id)
     if not deleted:

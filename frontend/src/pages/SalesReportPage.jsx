@@ -4,8 +4,10 @@ import PageNavbar from '../components/common/PageNavbar';
 import Pagination from '../components/common/Pagination';
 import SalesReportFilterBar from '../components/SalesReport/SalesReportFilterBar';
 import SalesReportTable from '../components/SalesReport/SalesReportTable';
+import Toast from '../components/common/Toast';
 import { icons } from '../constants/icons';
 import { salesApi, settingsApi } from '../api';
+import { exportToExcel } from '../utils/exportToExcel';
 
 const rangeToDates = (range) => {
   const today = new Date();
@@ -40,6 +42,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
@@ -145,6 +148,22 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
 
   const activeGroupByLabel = GROUP_BY_OPTIONS.find((o) => o.value === groupBy)?.label;
 
+  const handleExportToExcel = () => {
+    const dataToExport = reports.map((report) => ({
+      'Sale ID': report.sale_id,
+      'Bill No': report.bill_no,
+      'Item Name': report.itemName,
+      'Sold Quantity': report.soldQuantity,
+      'Total Price': report.totalPrice,
+    }));
+
+    const success = exportToExcel(dataToExport, 'sales_report', 'Sales Report');
+    if (!success) {
+      setToastMessage('No data to export');
+      setTimeout(() => setToastMessage(''), 3000);
+    }
+  };
+
   return (
     <AppLayout activePage="salesReport" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Sales Report" onToggleSidebar={onToggleSidebar} />
@@ -202,7 +221,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                   )}
                 </div>
 
-                <button className="flex h-9 items-center gap-2 rounded-md border border-[#6D31F6] bg-white px-5 text-[12px] font-semibold text-[#6D28D9] transition hover:bg-[#F8F5FF]" type="button">
+                <button onClick={handleExportToExcel} className="flex h-9 items-center gap-2 rounded-md border border-[#6D31F6] bg-white px-5 text-[12px] font-semibold text-[#6D28D9] transition hover:bg-[#F8F5FF]" type="button">
                   <icons.fileText className="h-4 w-4" />
                   Export to Excel
                 </button>
@@ -242,6 +261,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
           </section>
         </div>
       </main>
+      <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </AppLayout>
   );
 };

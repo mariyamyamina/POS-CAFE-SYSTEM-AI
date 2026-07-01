@@ -21,7 +21,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     )
 
 
-def _create_token(subject: str, expires_delta: timedelta, token_type: str) -> str:
+def _create_token(
+    subject: str,
+    expires_delta: timedelta,
+    token_type: str,
+    *,
+    role: str | None = None,
+    permissions: list[str] | None = None,
+) -> str:
     expire = datetime.now(timezone.utc) + expires_delta
     payload = {
         "sub": subject,
@@ -29,14 +36,20 @@ def _create_token(subject: str, expires_delta: timedelta, token_type: str) -> st
         "iat": datetime.now(timezone.utc),
         "type": token_type,
     }
+    if role is not None:
+        payload["role"] = role
+    if permissions is not None:
+        payload["permissions"] = permissions
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, *, role: str | None = None, permissions: list[str] | None = None) -> str:
     return _create_token(
         subject=str(user_id),
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         token_type="access",
+        role=role,
+        permissions=permissions,
     )
 
 

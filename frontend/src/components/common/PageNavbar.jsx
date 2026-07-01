@@ -30,13 +30,13 @@ const PageNavbar = ({
           <icons.calendar className="h-4 w-4 text-[#6D28D9]" />
           <div className="leading-none">
             <p className="text-[11px] font-bold text-[#171733]">{dateLabel ?? currentDateTime.dateLabel}</p>
-            <p className="mt-1 text-[8px] font-medium text-[#686B91]">{dayLabel ?? currentDateTime.dayLabel}</p>
+            <p className="mt-1 text-[10px] font-medium text-[#686B91]">{dayLabel ?? currentDateTime.dayLabel}</p>
           </div>
         </div>
         <div className="h-7 w-px bg-[#E5E7F0]" />
         <div className="flex items-center gap-2 pl-5">
           <icons.clock className="h-4 w-4 text-[#6D28D9]" />
-          <p className="text-[11px] font-bold text-[#171733]">{timeLabel ?? currentDateTime.timeLabel}</p>
+          <p className="text-[12px] font-bold text-[#171733]">{timeLabel ?? currentDateTime.timeLabel}</p>
         </div>
       </div>
     </header>

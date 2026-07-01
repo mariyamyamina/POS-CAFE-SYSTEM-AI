@@ -17,13 +17,18 @@ const lineValidate = {
 };
 
 /* ─── Base classes ──────────────────────────────────────────────────── */
-const BASE = 'h-[36px] w-full rounded-md border bg-white px-3 text-[12px] font-medium text-[#10112B] outline-none transition placeholder:text-[#9AA1B4]';
+const BASE = 'h-[36px] w-full rounded-md border bg-white px-3 text-[12px] font-medium text-[#7C3AED] outline-none transition placeholder:text-[#7C3AED]';
 const BASE_SEL = `${BASE} appearance-none pr-9 text-[#7C3AED]`;
 
 const inputCls = (hasErr) => `${BASE} ${fieldBorderClass(hasErr)}`;
 const selectCls = (hasErr) => `${BASE_SEL} ${fieldBorderClass(hasErr)}`;
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
+const tomorrowISO = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return tomorrow.toISOString().slice(0, 10);
+};
 
 /* ─── Sub-components ────────────────────────────────────────────────── */
 const Err = ({ msg }) => <FieldError message={msg} />;
@@ -45,13 +50,14 @@ const SelectInput = ({ value, onChange, onBlur, hasErr, children }) => (
   </div>
 );
 
-const DateInput = ({ value, onChange, onBlur, hasErr }) => (
+const DateInput = ({ value, onChange, onBlur, hasErr, minDate = null }) => (
   <input
     type="date"
     className={`${inputCls(hasErr)} text-[#7C3AED]`}
     value={value}
     onChange={onChange}
     onBlur={onBlur}
+    min={minDate}
   />
 );
 
@@ -65,15 +71,15 @@ const makeEmptyLine = () => ({
 });
 
 /* ─── Main form ─────────────────────────────────────────────────────── */
-const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
+const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave, user }) => {
   const isEdit = mode === 'edit';
   const confirm = useConfirm();
 
   const [fields, setFields] = useState({
     subject: isEdit ? request.subject : '',
-    requestedBy: isEdit ? request.requested_by_name : 'Current User',
+    requestedBy: isEdit ? request.requested_by_name : user?.username || 'Current User',
     requestedDate: isEdit ? request.requested_date : todayISO(),
-    expectedDelivery: isEdit ? request.expected_delivery || '' : '',
+    expectedDelivery: isEdit ? request.expected_delivery || '' : tomorrowISO(),
     status: 'Pending',
   });
 
@@ -308,6 +314,7 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
                 onChange={setF('expectedDelivery')}
                 onBlur={touchH('expectedDelivery')}
                 hasErr={Boolean(he('expectedDelivery'))}
+                minDate={tomorrowISO()}
               />
             </Field>
 
@@ -381,6 +388,7 @@ const ItemRequestForm = ({ mode = 'add', request, onCancel, onSave }) => {
                           onChange={(e) => updateLine(line.tempId, 'itemDate', e.target.value)}
                           onBlur={touchL(line.tempId, 'itemDate')}
                           hasErr={Boolean(le(line.tempId, 'itemDate', line.itemDate))}
+                          minDate={tomorrowISO()}
                         />
                         <Err msg={le(line.tempId, 'itemDate', line.itemDate)} />
                       </td>

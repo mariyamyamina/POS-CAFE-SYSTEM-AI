@@ -14,7 +14,7 @@ const validate = {
 };
 
 /* ─── Base classes ──────────────────────────────────────────────────── */
-const BASE_INPUT  = 'h-[35px] w-full rounded-md border bg-white px-3 text-[11px] font-medium text-[#10112B] outline-none transition placeholder:text-[#9AA1B4]';
+const BASE_INPUT  = 'h-[35px] w-full rounded-md border bg-white px-3 text-[11px] font-medium text-[#7C3AED] outline-none transition placeholder:text-[#7C3AED]';
 const BASE_SELECT = `${BASE_INPUT} appearance-none pr-9 text-[#7C3AED]`;
 
 const getItemCode = (item) =>
@@ -52,6 +52,18 @@ const SUPPLIER_OPTIONS = [
   { value: 'Main Supplier', label: 'Main Supplier' },
   { value: 'Beverage Supplier', label: 'Beverage Supplier' },
   { value: 'Kitchen Supplier', label: 'Kitchen Supplier' },
+  { value: 'Food Supplier', label: 'Food Supplier' },
+  { value: 'Dairy Supplier', label: 'Dairy Supplier' },
+  { value: 'Bakery Supplier', label: 'Bakery Supplier' },
+  { value: 'Snacks Supplier', label: 'Snacks Supplier' },
+  { value: 'Coffee Supplier', label: 'Coffee Supplier' },
+  { value: 'Tea Supplier', label: 'Tea Supplier' },
+  { value: 'Ice Cream Supplier', label: 'Ice Cream Supplier' },
+  { value: 'Condiments Supplier', label: 'Condiments Supplier' },
+  { value: 'Packaging Supplier', label: 'Packaging Supplier' },
+  { value: 'Cleaning Supplies', label: 'Cleaning Supplies' },
+  { value: 'Local Market', label: 'Local Market' },
+  { value: 'Wholesale Distributor', label: 'Wholesale Distributor' },
 ];
 
 /* ─── Main form ─────────────────────────────────────────────────────── */
@@ -197,7 +209,7 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
 
           {/* Item Code — read-only */}
           <Field label="Item Code" hint="Auto-generated">
-            <input className={`${BASE_INPUT} border-[#DDE1EC] bg-[#F9FAFC] text-[#7C3AED]`} defaultValue={getItemCode(item)} readOnly />
+            <input className={`${BASE_INPUT} border-[#DDE1EC] bg-[#F9FAFC] text-[#7C3AED]`} defaultValue={isEdit ? item?.id : "Auto generated on save"} readOnly />
           </Field>
 
           {/* Item Name */}
@@ -213,27 +225,44 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
 
           {/* Item Image */}
           <Field label="Item Image">
-            <button
-              className={`flex h-32 flex-col items-center justify-center rounded-md border border-dashed bg-white text-center transition
+            <div
+              className={`flex h-32 w-full items-center gap-3 rounded-md border bg-white px-3 transition cursor-pointer
                 ${imageFile ? 'border-[#7C3AED] bg-[#FBFAFF]' : 'border-[#DDE1EC] hover:border-[#7C3AED]/60 hover:bg-[#FBFAFF]'}`}
-              type="button"
               onClick={() => fileRef.current?.click()}
             >
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(ev) => setImageFile(ev.target.files[0])} />
-              <span className="flex h-7 w-9 items-center justify-center rounded-full bg-[#7C3AED] text-white">
-                <icons.upload className="h-5 w-5" />
-              </span>
-              <span className="mt-3 text-[12px] font-medium text-[#1F2548]">
-                {imageFile ? imageFile.name : isEdit && item?.image_url ? 'Click to replace image' : 'Click to upload or drag and drop'}
-              </span>
-              <span className="mt-2 text-[10px] font-medium text-[#7C3AED]">PNG, JPG or WEBP (Max. 2MB)</span>
-            </button>
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F4F5F9]">
+                {imageFile ? (
+                  <img
+                    src={URL.createObjectURL(imageFile)}
+                    alt="Preview"
+                    className="h-full w-full object-contain"
+                  />
+                ) : isEdit && item?.image_url ? (
+                  <img
+                    src={item.image_url}
+                    alt="Current"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <span className="flex h-7 w-9 items-center justify-center rounded-full bg-[#7C3AED] text-white">
+                    <icons.upload className="h-5 w-5" />
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col justify-center">
+                <span className="text-[11px] font-medium text-[#1F2548]">
+                  {imageFile ? imageFile.name : isEdit && item?.image_url ? 'Click to replace image' : 'Click to upload or drag and drop'}
+                </span>
+                <span className="mt-1 text-[10px] font-medium text-[#7C3AED]">PNG, JPG or WEBP (Max. 2MB)</span>
+              </div>
+            </div>
           </Field>
 
           {/* Description */}
           <Field label="Item Description">
             <textarea
-              className="h-32 w-full resize-none rounded-md border border-[#DDE1EC] bg-white px-3 py-3 text-[11px] font-medium text-[#10112B] outline-none transition placeholder:text-[#9AA1B4] focus:border-[#7C3AED]/50"
+              className="h-32 w-full resize-none rounded-md border border-[#DDE1EC] bg-white px-3 py-3 text-[11px] font-medium text-[#10112B] outline-none transition placeholder:text-[#7C3AED] focus:border-[#7C3AED]/50"
               placeholder="Enter item description"
               value={fields.description}
               onChange={set('description')}
@@ -277,6 +306,19 @@ const InventoryItemForm = ({ mode = 'add', item, onCancel, onSave }) => {
               <option value="Glass">Glass</option>
               <option value="Pcs">Pcs</option>
               <option value="Bowl">Bowl</option>
+              <option value="Plate">Plate</option>
+              <option value="Bottle">Bottle</option>
+              <option value="Can">Can</option>
+              <option value="Pack">Pack</option>
+              <option value="Box">Box</option>
+              <option value="Kg">Kg</option>
+              <option value="Ltr">Ltr</option>
+              <option value="ml">ml</option>
+              <option value="g">g</option>
+              <option value="Scoop">Scoop</option>
+              <option value="Slice">Slice</option>
+              <option value="Piece">Piece</option>
+              <option value="Serving">Serving</option>
             </SelectInput>
           </Field>
 

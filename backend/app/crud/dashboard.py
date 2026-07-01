@@ -101,8 +101,33 @@ def get_sales_overview(db: Session, days: int = 7):
     ]
 
 
-def get_top_selling_items(db: Session, limit: int = 5):
-    """Get top selling items by quantity sold."""
+def _period_date_range(period: str):
+    """Returns (start_date, end_date) inclusive, for a given period key."""
+    today = date.today()
+
+    if period == "last_week":
+        # Monday of last week -> Sunday of last week
+        this_monday = today - timedelta(days=today.weekday())
+        start_date = this_monday - timedelta(days=7)
+        end_date = this_monday - timedelta(days=1)
+    elif period == "this_month":
+        start_date = today.replace(day=1)
+        end_date = today
+    else:  # "this_week" (default), Monday of this week -> Sunday of this week
+        start_date = today - timedelta(days=today.weekday())
+        end_date = start_date + timedelta(days=6)
+
+    print(f"[Dashboard] Period: {period}, Start: {start_date}, End: {end_date}")
+    return start_date, end_date
+
+
+def get_top_selling_items(db: Session, limit: int = 5, period: str = "this_week"):
+    """Get top selling items by quantity sold, within a given period."""
+    start_date, end_date = _period_date_range(period)
+
+    print(f"[Dashboard] Querying top selling items for period: {period}")
+    print(f"[Dashboard] Date range: {start_date} to {end_date}")
+
     top_items = (
         db.query(
             SalesDtl.item_name,
@@ -110,30 +135,34 @@ def get_top_selling_items(db: Session, limit: int = 5):
             func.sum(SalesDtl.qty).label('total_sold'),
             func.sum(SalesDtl.total).label('total_revenue')
         )
+        .join(SalesHdr, SalesDtl.sale_id == SalesHdr.id)
+        .filter(func.date(SalesHdr.created_at) >= start_date)
+        .filter(func.date(SalesHdr.created_at) <= end_date)
         .group_by(SalesDtl.item_name, SalesDtl.item_id)
         .order_by(func.sum(SalesDtl.qty).desc())
         .limit(limit)
         .all()
     )
-    
+
+    print(f"[Dashboard] Found {len(top_items)} top selling items")
+
     result = []
     for item in top_items:
-        # Get image URL from inventory if item_id exists
         image_url = None
         if item.item_id:
             inventory_item = db.query(InventoryItem).filter(InventoryItem.id == item.item_id).first()
             if inventory_item:
                 image_url = inventory_item.image_url
-        
+
         result.append({
             "item_name": item.item_name,
             "total_sold": item.total_sold,
             "total_revenue": float(item.total_revenue),
             "image_url": image_url
         })
-    
-    return result
+        print(f"[Dashboard] Item: {item.item_name}, Sold: {item.total_sold}, Revenue: {item.total_revenue}")
 
+    return result
 
 def get_recent_transactions(db: Session, limit: int = 5):
     """Get recent sales transactions."""

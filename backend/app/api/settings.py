@@ -5,6 +5,7 @@ import logging
 from app.core.database import get_db
 from app.crud.settings import get_settings, update_settings
 from app.schemas.settings import SettingsResponse, SettingsUpdate
+from app.api.deps import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/api/settings", response_model=SettingsResponse)
-def get_current_settings(db: Session = Depends(get_db)):
+def get_current_settings(current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get current application settings."""
     try:
         return get_settings(db)
@@ -22,7 +23,7 @@ def get_current_settings(db: Session = Depends(get_db)):
 
 
 @router.put("/api/settings", response_model=SettingsResponse)
-def update_current_settings(settings_update: SettingsUpdate, db: Session = Depends(get_db)):
+def update_current_settings(settings_update: SettingsUpdate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     """Update application settings."""
     try:
         settings_data = settings_update.model_dump(exclude_unset=True)

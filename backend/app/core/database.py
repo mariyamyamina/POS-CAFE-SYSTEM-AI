@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from app.core.config import settings
 
 
+print("Access Token Expiry:", settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 Base = declarative_base()
 
 

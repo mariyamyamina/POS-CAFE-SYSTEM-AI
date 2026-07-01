@@ -5,12 +5,14 @@ import Pagination from '../components/common/Pagination';
 import InventoryFilterBar from '../components/Inventory/InventoryFilterBar';
 import InventoryTable from '../components/Inventory/InventoryTable';
 import InventoryItemForm from '../components/Inventory/InventoryItemForm';
+import Toast from '../components/common/Toast';
 import { icons } from '../constants/icons';
 import { inventoryApi } from '../api';
+import { exportToExcel } from '../utils/exportToExcel';
 
 const DEFAULT_FILTERS = {
   categoryId: 'all',
-  search: '',
+  itemId: 'all',
   status: 'all',
   dateFrom: '',
   dateTo: '',
@@ -20,6 +22,7 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -63,9 +66,8 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       result = result.filter((item) => String(item.category_id) === filters.categoryId);
     }
 
-    if (filters.search.trim()) {
-      const term = filters.search.trim().toLowerCase();
-      result = result.filter((item) => item.name.toLowerCase().includes(term));
+    if (filters.itemId !== 'all') {
+      result = result.filter((item) => String(item.id) === filters.itemId);
     }
 
     if (filters.status !== 'all') {
@@ -131,6 +133,29 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     fetchItems();
   };
 
+  const handleExportToExcel = () => {
+    const dataToExport = filteredItems.map((item) => ({
+      'Item ID': item.id,
+      'Item Name': item.name,
+      'Category': item.category_name || 'Unknown',
+      'Price': item.price,
+      'Unit': item.unit,
+      'In Stock': item.in_stock,
+      'Sold': item.sold,
+      'Purchased': item.purchased,
+      'Supplier': item.supplier || 'N/A',
+      'Status': item.status,
+      'Created At': item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
+      'Updated At': item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'N/A',
+    }));
+
+    const success = exportToExcel(dataToExport, 'inventory', 'Inventory Items');
+    if (!success) {
+      setToastMessage('No data to export');
+      setTimeout(() => setToastMessage(''), 3000);
+    }
+  };
+
   return (
     <AppLayout activePage="inventory" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Inventory" onToggleSidebar={onToggleSidebar} />
@@ -170,11 +195,11 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                     <icons.plus className="h-4 w-4" />
                     Add Item
                   </button>
-                  <button className="flex h-9 items-center gap-2 rounded-md bg-[#6D28D9] px-4 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#5B21B6]" type="button">
+                  <button onClick={() => onNavigate && onNavigate('itemRequest')} className="flex h-9 items-center gap-2 rounded-md bg-[#6D28D9] px-4 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#5B21B6]" type="button">
                     <icons.download className="h-4 w-4" />
                     Request Item
                   </button>
-                  <button className="flex h-9 items-center gap-2 rounded-md border border-[#DDE1EC] bg-white px-4 text-[12px] font-semibold text-[#343B58] transition hover:bg-[#F8F8FB]" type="button">
+                  <button onClick={handleExportToExcel} className="flex h-9 items-center gap-2 rounded-md border border-[#DDE1EC] bg-white px-4 text-[12px] font-semibold text-[#343B58] transition hover:bg-[#F8F8FB]" type="button">
                     <icons.fileText className="h-4 w-4" />
                     Export to Excel
                   </button>
@@ -214,6 +239,7 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
           </div>
         </main>
       )}
+      <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </AppLayout>
   );
 };

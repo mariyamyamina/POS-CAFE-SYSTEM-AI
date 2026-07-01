@@ -5,8 +5,10 @@ import Pagination from '../components/common/Pagination';
 import UsersFilterBar from '../components/Users/UsersFilterBar';
 import UsersTable from '../components/Users/UsersTable';
 import UserFormModal from '../components/Users/UserFormModal';
+import Toast from '../components/common/Toast';
 import { icons } from '../constants/icons';
 import { authApi } from '../api/index';
+import { exportToExcel } from '../utils/exportToExcel';
 
 const transformUserData = (users) => {
   return users.map((user) => {
@@ -38,6 +40,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [pageSize, setPageSize] = useState(5);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [toastMessage, setToastMessage] = useState('');
   const [activeFilters, setActiveFilters] = useState({ search: '', role: 'all', status: 'all' });
 
   useEffect(() => {
@@ -163,6 +166,27 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     }
   };
 
+  const handleExportToExcel = () => {
+    const dataToExport = filteredUsers.map((user) => ({
+      'User ID': user.id,
+      'First Name': user.firstName,
+      'Last Name': user.lastName,
+      'Username': user.username,
+      'Email': user.email,
+      'Role': user.role,
+      'Phone': user.phone || 'N/A',
+      'Status': user.status,
+      'Created Date': user.createdAtDate,
+      'Created Time': user.createdAtTime,
+    }));
+
+    const success = exportToExcel(dataToExport, 'users', 'Users');
+    if (!success) {
+      setToastMessage('No data to export');
+      setTimeout(() => setToastMessage(''), 3000);
+    }
+  };
+
   return (
     <AppLayout activePage="users" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Users Management" onToggleSidebar={onToggleSidebar} />
@@ -192,6 +216,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                   Add New User
                 </button>
                 <button
+                  onClick={handleExportToExcel}
                   className="flex h-9 items-center gap-1.5 rounded-md border border-[#DDE1EC] bg-white px-4 text-[12px] font-semibold text-[#374151] transition hover:bg-[#F8F8FB]"
                   type="button"
                 >
@@ -229,6 +254,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
         onSave={handleSaveUser}
         onDelete={handleDeleteUser}
       />
+      <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </AppLayout>
   );
 };

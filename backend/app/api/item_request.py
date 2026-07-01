@@ -78,7 +78,7 @@ def submit_item_request(
 
 
 @router.get("/item-requests/{request_id}", response_model=ItemRequestResponse)
-def get_item_request_by_id(request_id: int, db: Session = Depends(get_db)):
+def get_item_request_by_id(request_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     hdr = get_item_request(db, request_id)
     if not hdr:
         raise HTTPException(status_code=404, detail="Item request not found")
@@ -86,7 +86,7 @@ def get_item_request_by_id(request_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/item-requests", response_model=List[ItemRequestResponse])
-def get_all_item_requests(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_all_item_requests(current_user = Depends(get_current_user), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     hdrs = get_item_requests(db, skip=skip, limit=limit)
     return [_to_response(h) for h in hdrs]
 
@@ -95,6 +95,7 @@ def get_all_item_requests(skip: int = 0, limit: int = 100, db: Session = Depends
 def update_existing_item_request(
     request_id: int,
     request_data: ItemRequestUpdate,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     if request_data.items is not None:
@@ -107,7 +108,7 @@ def update_existing_item_request(
 
 
 @router.delete("/item-requests/{request_id}")
-def delete_existing_item_request(request_id: int, db: Session = Depends(get_db)):
+def delete_existing_item_request(request_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
     deleted = delete_item_request(db, request_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Item request not found")
@@ -116,6 +117,7 @@ def delete_existing_item_request(request_id: int, db: Session = Depends(get_db))
 @router.put("/item-requests/{request_id}/receive", response_model=ItemRequestResponse)
 def receive_existing_item_request(
     request_id: int,
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     hdr = receive_item_request(db, request_id)

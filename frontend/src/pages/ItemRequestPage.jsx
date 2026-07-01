@@ -5,8 +5,10 @@ import Pagination from '../components/common/Pagination';
 import ItemRequestFilterBar from '../components/ItemRequest/ItemRequestFilterBar';
 import ItemRequestTable from '../components/ItemRequest/ItemRequestTable';
 import ItemRequestForm from '../components/ItemRequest/ItemRequestForm';
+import Toast from '../components/common/Toast';
 import { icons } from '../constants/icons';
 import { itemRequestApi } from '../api';
+import { exportToExcel } from '../utils/exportToExcel';
 
 const formatDate = (isoDate) => {
   if (!isoDate) return '—';
@@ -44,6 +46,7 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -131,6 +134,24 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     fetchRequests();
   };
 
+  const handleExportToExcel = () => {
+    const dataToExport = filteredRequests.map((request) => ({
+      'Request ID': request.request_no ?? request.id,
+      'Subject': request.subject,
+      'Requested By': request.requested_by_name || `User #${request.requested_by}`,
+      'Requested Date': formatDateTime(request.created_at),
+      'Expected Delivery': formatDate(request.expected_delivery),
+      'Status': request.status,
+      'Items Count': request.items?.length || 0,
+    }));
+
+    const success = exportToExcel(dataToExport, 'item_requests', 'Item Requests');
+    if (!success) {
+      setToastMessage('No data to export');
+      setTimeout(() => setToastMessage(''), 3000);
+    }
+  };
+
   const emptyStateMessage = requests.length === 0
     ? 'No item requests yet. Click "New Item Request" to create one.'
     : 'No item requests match the current filters.';
@@ -145,6 +166,7 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
           request={selectedRequest}
           onCancel={handleCloseForm}
           onSave={handleFormSaved}
+          user={user}
         />
       ) : (
         <main className="flex-1 overflow-y-auto px-3 pb-4 lg:px-5">
@@ -168,7 +190,7 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
                     <icons.plus className="h-4 w-4" />
                     New Item Request
                   </button>
-                  <button className="flex h-9 items-center gap-2 rounded-md border border-[#6D31F6] bg-white px-5 text-[12px] font-semibold text-[#6D28D9] transition hover:bg-[#F8F5FF]" type="button">
+                  <button onClick={handleExportToExcel} className="flex h-9 items-center gap-2 rounded-md border border-[#6D31F6] bg-white px-5 text-[12px] font-semibold text-[#6D28D9] transition hover:bg-[#F8F5FF]" type="button">
                     <icons.fileText className="h-4 w-4" />
                     Export to Excel
                   </button>
@@ -207,6 +229,7 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
           </div>
         </main>
       )}
+      <Toast message={toastMessage} onClose={() => setToastMessage(null)} />
     </AppLayout>
   );
 };

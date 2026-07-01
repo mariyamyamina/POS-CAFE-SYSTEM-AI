@@ -1,7 +1,7 @@
 import React from 'react';
 import { icons } from '../../constants/icons';
 
-const ProductCard = ({ item, onAdd, viewMode = "grid", quantity = 0 }) => {
+const ProductCard = ({ item, onAdd, viewMode = "grid", quantity = 0, itemNumber = null }) => {
   if (viewMode === "list") {
     return (
       <div
@@ -44,6 +44,11 @@ const ProductCard = ({ item, onAdd, viewMode = "grid", quantity = 0 }) => {
       {quantity > 0 && (
         <div className="absolute top-0 left-0 flex h-5 w-5 items-center justify-center rounded-br-md rounded-tl-md bg-primary text-[11px] font-bold text-white z-10">
           {quantity}
+        </div>
+      )}
+      {itemNumber !== null && (
+        <div className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-bl-md rounded-tr-md bg-text-100 text-[10px] font-bold text-text-600 z-10">
+          {itemNumber}
         </div>
       )}
       <div className="flex h-12 w-full items-center justify-center overflow-hidden">

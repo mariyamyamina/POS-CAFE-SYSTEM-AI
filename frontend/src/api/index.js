@@ -200,7 +200,7 @@ export const salesApi = {
 
 export const dashboardApi = {
   getDashboardData: () => request('/api/dashboard'),
-  getTopSellingItems: (period) => request(`/api/dashboard/top-selling-items?period=${period}`),
+  getTopSellingItems: (period = 'this_week') => request(`/api/dashboard/top-selling-items?period=${encodeURIComponent(period)}`),
 };
 
 
