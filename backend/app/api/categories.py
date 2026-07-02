@@ -11,19 +11,19 @@ from app.crud.category import (
     delete_category
 )
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user , require_permission
 
 router = APIRouter()
 
 
 @router.get("/api/categories", response_model=List[CategoryResponse])
-def get_all_categories(current_user = Depends(get_current_user), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_all_categories(current_user = Depends(require_permission("categories")), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get all categories."""
     return get_categories(db, skip=skip, limit=limit)
 
 
 @router.get("/api/categories/{category_id}", response_model=CategoryResponse)
-def get_category_by_id(category_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_category_by_id(category_id: int, current_user = Depends(require_permission("categories")), db: Session = Depends(get_db)):
     """Get a single category by ID."""
     category = get_category(db, category_id)
     if not category:
@@ -32,7 +32,7 @@ def get_category_by_id(category_id: int, current_user = Depends(get_current_user
 
 
 @router.post("/api/categories", response_model=CategoryResponse)
-def create_new_category(category: CategoryCreate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_new_category(category: CategoryCreate, current_user = Depends(require_permission("categories")), db: Session = Depends(get_db)):
     """Create a new category."""
     # Check if category with same name already exists
     from app.crud.category import get_category_by_name
@@ -44,7 +44,7 @@ def create_new_category(category: CategoryCreate, current_user = Depends(get_cur
 
 
 @router.put("/api/categories/{category_id}", response_model=CategoryResponse)
-def update_existing_category(category_id: int, category: CategoryUpdate, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_existing_category(category_id: int, category: CategoryUpdate, current_user = Depends(require_permission("categories")), db: Session = Depends(get_db)):
     """Update an existing category."""
     updated = update_category(db, category_id, name=category.name, icon=category.icon, description=category.description)
     if not updated:
@@ -53,7 +53,7 @@ def update_existing_category(category_id: int, category: CategoryUpdate, current
 
 
 @router.delete("/api/categories/{category_id}")
-def delete_existing_category(category_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_existing_category(category_id: int, current_user = Depends(require_permission("categories")), db: Session = Depends(get_db)):
     """Delete a category."""
     deleted = delete_category(db, category_id)
     if not deleted:

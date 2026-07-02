@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { icons } from '../constants/icons';
-import { authApi, saveSession, clearSession } from '../api';
+import { authApi, saveSession, clearSession , startTokenRefreshTimer } from '../api';
 import { useSettings } from '../context/SettingsContext';
 import {
   FaBriefcase,
@@ -187,6 +187,7 @@ const AuthPage = ({ mode, onShowLogin, onShowRegister, onLogin }) => {
         password: loginFields.password,
       });
       saveSession(response);
+      startTokenRefreshTimer();
       onLogin?.();
     } catch (error) {
       setSubmitError(error.message || 'Login failed. Please try again.');

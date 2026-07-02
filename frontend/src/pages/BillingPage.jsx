@@ -13,6 +13,7 @@ import { useConfirm } from '../context/ConfirmContext';
 import { icons } from '../constants/icons';
 import { inventoryApi, categoriesApi, salesApi, settingsApi, reservedBillApi } from '../api';
 import ReservedBillsModal from '../components/Billing/ReservedBillsModal';
+import UnauthorizedAccess from '../components/common/UnauthorizedAccess';
 
 const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const confirm = useConfirm();
@@ -31,6 +32,7 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [mobileTab, setMobileTab] = useState('menu');
   const [showReservedModal, setShowReservedModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const itemsPerPage = 20;
 
   // ── New state for the bill-row selection, tender input, and toast ──
@@ -38,26 +40,41 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [tender, setTender] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
 
-  React.useEffect(() => {
-    Promise.all([inventoryApi.getItems(), categoriesApi.getCategories()])
-      .then(([itemsData, catsData]) => {
-        const catMap = catsData.reduce((acc, cat) => {
-          acc[cat.id] = cat.name;
-          return acc;
-        }, {});
+ React.useEffect(() => {
+  setIsUnauthorized(false);
 
-        const mappedItems = itemsData
-          .filter(item => item.is_active)
-          .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)) // Sort by created_at ascending
-          .map(item => ({
-            ...item,
-            category: catMap[item.category_id] || 'Unknown',
-            image: item.image_url
-          }));
-        setMenuItems(mappedItems);
-      })
-      .catch(err => console.error('Failed to load menu items', err));
-  }, []);
+  Promise.all([
+    inventoryApi.getItems(),
+    categoriesApi.getCategories(),
+  ])
+    .then(([itemsData, catsData]) => {
+      const catMap = catsData.reduce((acc, cat) => {
+        acc[cat.id] = cat.name;
+        return acc;
+      }, {});
+
+      const mappedItems = itemsData
+        .filter((item) => item.is_active)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .map((item) => ({
+          ...item,
+          category: catMap[item.category_id] || "Unknown",
+          image: item.image_url,
+        }));
+
+      setMenuItems(mappedItems);
+      setIsUnauthorized(false);
+    })
+    .catch((err) => {
+      const status = err?.response?.status || err?.status;
+
+      if (status === 401 || status === 403) {
+        setIsUnauthorized(true);
+      } else {
+        console.error("Failed to load menu items:", err);
+      }
+    });
+}, []);
 
   // Reset page when category or search changes
   React.useEffect(() => {
@@ -393,6 +410,15 @@ const BillingPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       onSelectItem={setSelectedItemId}
     />
   );
+
+  if (isUnauthorized) {
+  return (
+    <UnauthorizedAccess
+      onReturnToDashboard={() => onNavigate("dashboard")}
+      onLogout={onLogout}
+    />
+  );
+}
 
   return (
     <AppLayout activePage="billing" onLogout={onLogout} onNavigate={onNavigate} user={user}>

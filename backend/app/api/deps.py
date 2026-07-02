@@ -47,4 +47,25 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. Admin role required."
         )
-    return current_user
+    return current_user 
+
+def require_permission(permission: str):
+    def checker(current_user: User = Depends(get_current_user)) -> User:
+        
+        print("Checking permission:", permission)
+        print("User permissions:", current_user.permissions)
+        # Admin can access everything
+        if current_user.role == "Admin":
+            return current_user
+
+        permissions = current_user.permissions or {}
+
+        if not permissions.get(permission, False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You do not have permission to access {permission}.",
+            )
+
+        return current_user
+
+    return checker

@@ -42,6 +42,7 @@ import {
   FiArrowUp,
   FiArrowDown,
   FiAlertTriangle,
+  FiLock,
 } from 'react-icons/fi';
 
 import {
@@ -208,5 +209,6 @@ export const icons = {
   arrowUp: FiArrowUp,
   arrowDown: FiArrowDown,
   alertTriangle: FiAlertTriangle,
+  lock: FiLock,
   
 };

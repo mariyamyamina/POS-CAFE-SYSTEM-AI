@@ -33,6 +33,7 @@ const clearSession = () => {
 // ── Token-refresh state ───────────────────────────────────────────────────────
 // Prevents multiple simultaneous refresh calls (only one in-flight at a time).
 let _refreshPromise = null;
+let _refreshTimer = null;
 
 const _doRefresh = async () => {
   const refreshToken = getStoredRefreshToken();
@@ -64,6 +65,33 @@ const refreshAccessToken = () => {
     });
   }
   return _refreshPromise;
+};
+
+export const startTokenRefreshTimer = () => {
+  if (_refreshTimer) {
+    clearInterval(_refreshTimer);
+  }
+
+  _refreshTimer = setInterval(async () => {
+    try {
+      await refreshAccessToken();
+      console.log("Access token refreshed");
+    } catch (err) {
+      clearInterval(_refreshTimer);
+      _refreshTimer = null;
+
+      clearSession();
+      window.location.href = "/login";
+    }
+  }, (5 * 60 - 30) * 1000);
+};
+
+
+export const stopTokenRefreshTimer = () => {
+  if (_refreshTimer) {
+    clearInterval(_refreshTimer);
+    _refreshTimer = null;
+  }
 };
 
 // ── Core request function ─────────────────────────────────────────────────────
@@ -110,7 +138,9 @@ const request = async (path, { method = 'GET', body, headers = {}, auth = true, 
     : await response.text();
 
   if (!response.ok) {
-    throw new Error(payload?.detail || payload?.message || 'Request failed');
+    const error = new Error(payload?.detail || payload?.message || 'Request failed');
+    error.status = response.status;
+    throw error;
   }
 
   return payload;

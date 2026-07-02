@@ -13,17 +13,28 @@ const DEFAULT_SETTINGS = {
 export const SettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   const loadSettings = async () => {
-    try {
-      const data = await settingsApi.getSettings();
-      setSettings(data);
-    } catch (error) {
+  setLoading(true);
+  setIsUnauthorized(false); // 🔥 IMPORTANT RESET
+
+  try {
+    const data = await settingsApi.getSettings();
+    setSettings(data);
+  } catch (error) {
+    const status = error?.response?.status || error?.status;
+
+    if (status === 401 || status === 403) {
+      setIsUnauthorized(true);
+      setSettings(DEFAULT_SETTINGS); // optional safety reset
+    } else {
       console.error('Failed to load settings:', error);
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const updateSettings = async (newSettings) => {
     try {
@@ -36,12 +47,9 @@ export const SettingsProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
 
   return (
-    <SettingsContext.Provider value={{ settings, loading, updateSettings, reloadSettings: loadSettings }}>
+    <SettingsContext.Provider value={{ settings, loading, updateSettings, reloadSettings: loadSettings, isUnauthorized }}>
       {children}
     </SettingsContext.Provider>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AuthPage from './pages/AuthPage';
-import { clearSession, getStoredToken, getStoredUser } from './api';
+import { clearSession, getStoredToken, getStoredUser , getStoredRefreshToken , startTokenRefreshTimer , stopTokenRefreshTimer } from './api';
 import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
 import ItemRequestPage from './pages/ItemRequestPage';
@@ -45,6 +45,7 @@ function App() {
 
   useEffect(() => {
     if (getStoredToken()) {
+      startTokenRefreshTimer();
       if (window.location.pathname === '/' || window.location.pathname === '/login') {
         setPage('dashboard');
         window.history.replaceState({}, '', '/dashboard');
@@ -76,6 +77,7 @@ function App() {
   };
 
   const logout = () => {
+    stopTokenRefreshTimer();
     clearSession();
     setUser(null);
     navigateToPage('login');
@@ -99,39 +101,7 @@ function App() {
       );
     }
 
-    // Admins have access to everything
-    if (user?.role === 'Admin') {
-      return <Component onLogout={logout} onNavigate={navigateToPage} user={user} />;
-    }
-
-    // Check specific page permission
-    if (user && user.permissions && user.permissions[pageName] === true) {
-      return <Component onLogout={logout} onNavigate={navigateToPage} user={user} />;
-    }
-
-    // Unauthorized state
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-gray-50">
-        <h2 className="text-2xl font-bold text-gray-800">Unauthorized Access</h2>
-        <p className="text-gray-500">You do not have permission to view this page.</p>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => navigateToPage('dashboard')}
-            className="rounded-md border border-[#DDE1EC] bg-white px-5 py-2.5 font-semibold text-[#374151] shadow-sm transition hover:bg-gray-50"
-          >
-            Return to Dashboard
-          </button>
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-md bg-[#EF4444] px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-[#DC2626]"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    );
+    return <Component onLogout={logout} onNavigate={navigateToPage} user={user} />;
   };
 
   if (page === 'dashboard') return renderProtectedPage('dashboard', DashboardPage);

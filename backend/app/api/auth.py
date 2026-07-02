@@ -29,7 +29,7 @@ from app.schemas.auth import (
     UserOut,
     UpdateUserRequest,
 )
-from app.api.deps import get_current_user, require_admin
+from app.api.deps import get_current_user, require_admin , require_permission
 from app.models.user import User
 
 
@@ -155,12 +155,12 @@ def read_current_user(current_user: User = Depends(get_current_user)):
 
 
 @router.get("/users", response_model=list[UserOut])
-def get_users(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_users(current_user: User = Depends(require_permission("users")), db: Session = Depends(get_db)):
     return get_all_users(db)
 
 
 @router.post("/users", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_new_user(payload: AdminCreateUserRequest, current_user: User = Depends(require_admin), db: Session = Depends(get_db)):
+def create_new_user(payload: AdminCreateUserRequest, current_user: User = Depends(require_permission("users")), db: Session = Depends(get_db)):
     if get_user_by_username(db, payload.username):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username is already taken")
     if get_user_by_email(db, payload.email):

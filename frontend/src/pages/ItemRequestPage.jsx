@@ -9,6 +9,7 @@ import Toast from '../components/common/Toast';
 import { icons } from '../constants/icons';
 import { itemRequestApi } from '../api';
 import { exportToExcel } from '../utils/exportToExcel';
+import UnauthorizedAccess from '../components/common/UnauthorizedAccess';
 
 const formatDate = (isoDate) => {
   if (!isoDate) return '—';
@@ -43,6 +44,8 @@ const applyFilters = (requests, filters) => {
 };
 
 const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
+const [isUnauthorized, setIsUnauthorized] = useState(false);
+
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -69,9 +72,14 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       const data = await itemRequestApi.getRequests();
       setRequests(data || []);
     } catch (err) {
-      console.error('Failed to load item requests:', err);
-      setError(err.message || 'Failed to load item requests.');
-    } finally {
+  if (err.status === 403) {
+    setIsUnauthorized(true);
+    return;
+  }
+
+  console.error(err);
+  setError(err.message || "Failed to load item requests.");
+} finally {
       setLoading(false);
     }
   }, []);
@@ -155,6 +163,15 @@ const ItemRequestPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const emptyStateMessage = requests.length === 0
     ? 'No item requests yet. Click "New Item Request" to create one.'
     : 'No item requests match the current filters.';
+
+    if (isUnauthorized) {
+  return (
+    <UnauthorizedAccess
+      onReturnToDashboard={() => onNavigate("dashboard")}
+      onLogout={onLogout}
+    />
+  );
+}
 
   return (
     <AppLayout activePage="itemRequest" onLogout={onLogout} onNavigate={onNavigate} user={user}>

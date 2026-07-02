@@ -6,6 +6,7 @@ import UsersFilterBar from '../components/Users/UsersFilterBar';
 import UsersTable from '../components/Users/UsersTable';
 import UserFormModal from '../components/Users/UserFormModal';
 import Toast from '../components/common/Toast';
+import UnauthorizedAccess from '../components/common/UnauthorizedAccess';
 import { icons } from '../constants/icons';
 import { authApi } from '../api/index';
 import { exportToExcel } from '../utils/exportToExcel';
@@ -41,6 +42,7 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [activeFilters, setActiveFilters] = useState({ search: '', role: 'all', status: 'all' });
 
   useEffect(() => {
@@ -51,7 +53,11 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
         const transformedData = transformUserData(data);
         setUsers(transformedData);
       } catch (error) {
-        console.error('Failed to fetch users:', error);
+        if (error.status === 403) {
+          setIsUnauthorized(true);
+        } else {
+          console.error('Failed to fetch users:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -186,6 +192,15 @@ const UsersPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       setTimeout(() => setToastMessage(''), 3000);
     }
   };
+
+  if (isUnauthorized) {
+    return (
+      <UnauthorizedAccess
+        onReturnToDashboard={() => onNavigate('dashboard')}
+        onLogout={onLogout}
+      />
+    );
+  }
 
   return (
     <AppLayout activePage="users" onLogout={onLogout} onNavigate={onNavigate} user={user}>

@@ -9,6 +9,7 @@ import Toast from '../components/common/Toast';
 import { icons } from '../constants/icons';
 import { inventoryApi } from '../api';
 import { exportToExcel } from '../utils/exportToExcel';
+import UnauthorizedAccess from '../components/common/UnauthorizedAccess';
 
 const DEFAULT_FILTERS = {
   categoryId: 'all',
@@ -29,6 +30,7 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const [formMode, setFormMode] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -37,8 +39,13 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       const data = await inventoryApi.getItems();
       setItems(data || []);
     } catch (err) {
-      console.error('Failed to load inventory:', err);
-      setError(err.message || 'Failed to load inventory items.');
+      if (err.status === 403) {
+        setIsUnauthorized(true);
+        return;
+      }
+
+      console.error("Failed to load inventory:", err);
+      setError(err.message || "Failed to load inventory items.");
     } finally {
       setLoading(false);
     }
@@ -155,6 +162,15 @@ const InventoryPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       setTimeout(() => setToastMessage(''), 3000);
     }
   };
+
+  if (isUnauthorized) {
+    return (
+      <UnauthorizedAccess
+        onReturnToDashboard={() => onNavigate("dashboard")}
+        onLogout={onLogout}
+      />
+    );
+  }
 
   return (
     <AppLayout activePage="inventory" onLogout={onLogout} onNavigate={onNavigate} user={user}>

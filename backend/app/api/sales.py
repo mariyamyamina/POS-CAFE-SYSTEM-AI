@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.api.deps import get_current_user  # ⚠️ assumed path/name — adjust if your auth dependency differs
+from app.api.deps import get_current_user , require_permission # ⚠️ assumed path/name — adjust if your auth dependency differs
 from app.models.user import User
 from app.crud.sales import create_sale, get_sale, get_sales, get_sales_report_rows
 from app.schemas.sales import SaleCreate, SaleResponse, SalesReportRow
@@ -35,7 +35,7 @@ def _to_sale_response(hdr) -> dict:
 def create_new_sale(
     sale: SaleCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("sales")),
 ):
     """
     Records a completed sale: header + line items, in one transaction.
@@ -50,7 +50,7 @@ def create_new_sale(
 
 
 @router.get("/api/sales/{sale_id}", response_model=SaleResponse)
-def get_sale_by_id(sale_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_sale_by_id(sale_id: int, current_user = Depends(require_permission("sales")), db: Session = Depends(get_db)):
     hdr = get_sale(db, sale_id)
     if not hdr:
         raise HTTPException(status_code=404, detail="Sale not found")
@@ -58,7 +58,7 @@ def get_sale_by_id(sale_id: int, current_user = Depends(get_current_user), db: S
 
 
 @router.get("/api/sales", response_model=List[SaleResponse])
-def get_all_sales(current_user = Depends(get_current_user), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_all_sales(current_user = Depends(require_permission("sales")), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     hdrs = get_sales(db, skip=skip, limit=limit)
     return [_to_sale_response(h) for h in hdrs]
 
@@ -68,7 +68,7 @@ def get_sales_report(
     date_from: Optional[date] = None,
     date_to: Optional[date] = None,
     item_name: Optional[str] = None,
-    current_user = Depends(get_current_user),
+    current_user = Depends(require_permission("sales")),
     db: Session = Depends(get_db),
 ):
     """

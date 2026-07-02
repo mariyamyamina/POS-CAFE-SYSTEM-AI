@@ -15,6 +15,7 @@ from app.crud.item_request import (
     receive_item_request,
 )
 from app.crud.inventory import get_item as get_inventory_item
+from app.api.deps import require_permission
 from app.schemas.item_request import ItemRequestCreate, ItemRequestUpdate, ItemRequestResponse
 
 router = APIRouter()
@@ -47,7 +48,7 @@ def _validate_items_exist(db: Session, items):
 def save_item_request_draft(
     request_data: ItemRequestCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("item_request")),
 ):
     """
     'Save' button — creates the request with status=Pending.
@@ -64,7 +65,7 @@ def save_item_request_draft(
 def submit_item_request(
     request_data: ItemRequestCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_permission("item_request")),
 ):
     """
     'Submit Request' button — creates the request with status="On the way".
@@ -78,15 +79,21 @@ def submit_item_request(
 
 
 @router.get("/item-requests/{request_id}", response_model=ItemRequestResponse)
-def get_item_request_by_id(request_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_item_request_by_id(request_id: int, current_user = Depends(require_permission("item_request")), db: Session = Depends(get_db)):
     hdr = get_item_request(db, request_id)
     if not hdr:
         raise HTTPException(status_code=404, detail="Item request not found")
     return _to_response(hdr)
 
 
-@router.get("/item-requests", response_model=List[ItemRequestResponse])
-def get_all_item_requests(current_user = Depends(get_current_user), skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+@router.get("/item-requests")
+def get_all_item_requests(
+    current_user=Depends(require_permission("item_request")),
+    skip: int = 0,
+    limit: int = 100,
+    db: Session =Depends(get_db),
+):
+    print("INSIDE ITEM REQUEST ROUTE")
     hdrs = get_item_requests(db, skip=skip, limit=limit)
     return [_to_response(h) for h in hdrs]
 
@@ -95,7 +102,7 @@ def get_all_item_requests(current_user = Depends(get_current_user), skip: int = 
 def update_existing_item_request(
     request_id: int,
     request_data: ItemRequestUpdate,
-    current_user = Depends(get_current_user),
+    current_user = Depends(require_permission("item_request")),
     db: Session = Depends(get_db),
 ):
     if request_data.items is not None:
@@ -108,7 +115,7 @@ def update_existing_item_request(
 
 
 @router.delete("/item-requests/{request_id}")
-def delete_existing_item_request(request_id: int, current_user = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_existing_item_request(request_id: int, current_user = Depends(require_permission("item_request")), db: Session = Depends(get_db)):
     deleted = delete_item_request(db, request_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Item request not found")
@@ -117,7 +124,7 @@ def delete_existing_item_request(request_id: int, current_user = Depends(get_cur
 @router.put("/item-requests/{request_id}/receive", response_model=ItemRequestResponse)
 def receive_existing_item_request(
     request_id: int,
-    current_user = Depends(get_current_user),
+    current_user = Depends(require_permission("item_request")),
     db: Session = Depends(get_db),
 ):
     hdr = receive_item_request(db, request_id)

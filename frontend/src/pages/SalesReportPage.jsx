@@ -8,6 +8,7 @@ import Toast from '../components/common/Toast';
 import { icons } from '../constants/icons';
 import { salesApi, settingsApi } from '../api';
 import { exportToExcel } from '../utils/exportToExcel';
+import UnauthorizedAccess from '../components/common/UnauthorizedAccess';
 
 const rangeToDates = (range) => {
   const today = new Date();
@@ -57,6 +58,7 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
   const groupByRef = useRef(null);
 
   const [settings, setSettings] = useState(null);
+    const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   // Close the Item Wise / Bill Wise dropdown on outside click
   useEffect(() => {
@@ -107,9 +109,14 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
       setReports(mapped);
       setPage(1);
     } catch (err) {
-      console.error('Failed to load sales report:', err);
-      setError(err.message || 'Failed to load sales report.');
-    } finally {
+      if (err.status === 403) {
+        setIsUnauthorized(true);
+        return;
+      }
+
+      console.error("Failed to load inventory:", err);
+      setError(err.message || "Failed to load inventory items.");
+    }finally {
       setLoading(false);
     }
   }, [rangeFilter, customFrom, customTo, itemFilter]);
@@ -164,6 +171,16 @@ const SalesReportPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
     }
   };
 
+   if (isUnauthorized) {
+    return (
+      <UnauthorizedAccess
+        onReturnToDashboard={() => onNavigate("dashboard")}
+        onLogout={onLogout}
+      />
+    );
+  }
+
+  
   return (
     <AppLayout activePage="salesReport" onLogout={onLogout} onNavigate={onNavigate} user={user}>
       <PageNavbar title="Sales Report" onToggleSidebar={onToggleSidebar} />

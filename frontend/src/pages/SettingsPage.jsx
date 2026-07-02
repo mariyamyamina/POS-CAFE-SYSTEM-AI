@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import AppLayout from '../layout/AppLayout';
 import PageNavbar from '../components/common/PageNavbar';
 import SettingsAccordionItem from '../components/Settings/SettingsAccordionItem';
@@ -6,6 +6,7 @@ import GeneralSettingsPanel from '../components/Settings/GeneralSettingsPanel';
 import InventorySettingsPanel from '../components/Settings/InventorySettingsPanel';
 import MenuManagementSettingsPanel from '../components/Settings/MenuManagementSettingsPanel';
 import UserSettingsPanel from '../components/Settings/UserSettingsPanel';
+import {useSettings} from '../context/SettingsContext';
 
 const SECTIONS = [
   { key: 'general', title: 'General Settings', Panel: GeneralSettingsPanel },
@@ -15,6 +16,11 @@ const SECTIONS = [
 ];
 
 const SettingsPage = ({ onToggleSidebar, onLogout, onNavigate, user }) => {
+  const { reloadSettings } = useSettings();
+
+    useEffect(() => {
+    reloadSettings();
+  }, []);
   // Only one section is expanded at a time, matching the design.
   const [openSection, setOpenSection] = useState(null);
 
