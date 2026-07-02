@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import AuthPage from './pages/AuthPage';
-import { clearSession, getStoredToken, getStoredUser , getStoredRefreshToken , startTokenRefreshTimer , stopTokenRefreshTimer } from './api';
+import { clearSession, getStoredToken, getStoredUser, getStoredRefreshToken, startTokenRefreshTimer, stopTokenRefreshTimer } from './api';
 import BillingPage from './pages/BillingPage';
 import InventoryPage from './pages/InventoryPage';
 import ItemRequestPage from './pages/ItemRequestPage';
@@ -10,6 +10,7 @@ import CommonAppPage from './pages/CommonAppPage';
 import SettingsPage from './pages/SettingsPage';
 import DashboardPage from './pages/DashboardPage';
 import { isAppPage } from './routes/routes';
+import { useConfirm } from './context/ConfirmContext';
 
 const PATH_TO_PAGE = {
   '/dashboard': 'dashboard',
@@ -31,6 +32,10 @@ const PAGE_TO_PATH = {
   settings: '/settings',
 };
 
+// Change to 30 if you'd rather have a longer idle window.
+const IDLE_TIMEOUT_MINUTES = 15;
+const IDLE_TIMEOUT = IDLE_TIMEOUT_MINUTES * 60 * 1000;
+
 const getInitialPage = () => {
   if (typeof window === 'undefined') {
     return 'login';
@@ -42,6 +47,12 @@ const getInitialPage = () => {
 function App() {
   const [page, setPage] = useState(getInitialPage);
   const [user, setUser] = useState(null);
+  const confirm = useConfirm();
+
+  // Was previously declared at module scope (outside the component) — that's
+  // an invalid hook call and would crash the app / silently break the whole
+  // idle-timeout feature. Hooks must live inside the component body.
+  const idleTimer = useRef(null);
 
   useEffect(() => {
     if (getStoredToken()) {
@@ -82,6 +93,58 @@ function App() {
     setUser(null);
     navigateToPage('login');
   };
+
+  const handleSessionExpired = async () => {
+    // Log the user out and redirect immediately — the dialog below is purely
+    // informational and doesn't gate the logout on the user clicking OK.
+    stopTokenRefreshTimer();
+    clearSession();
+    setUser(null);
+    navigateToPage('login');
+
+    await confirm({
+      title: 'Session Expired',
+      message: `You've been logged out due to ${IDLE_TIMEOUT_MINUTES} minutes of inactivity. Please log in again.`,
+      confirmLabel: 'OK',
+      confirmVariant: 'neutral',
+      hideCancel: true,
+    });
+  };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const resetTimer = () => {
+      clearTimeout(idleTimer.current);
+
+      idleTimer.current = setTimeout(() => {
+        handleSessionExpired();
+      }, IDLE_TIMEOUT);
+    };
+
+    const events = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'scroll',
+      'touchstart',
+      'click',
+    ];
+
+    events.forEach((event) =>
+      window.addEventListener(event, resetTimer)
+    );
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(idleTimer.current);
+
+      events.forEach((event) =>
+        window.removeEventListener(event, resetTimer)
+      );
+    };
+  }, [user]);
 
   const renderProtectedPage = (pageName, Component) => {
     // If there is no user data, session might be invalid

@@ -31,6 +31,7 @@ from app.schemas.auth import (
 )
 from app.api.deps import get_current_user, require_admin , require_permission
 from app.models.user import User
+from app.core.aes import decrypt_password
 
 
 def _build_permissions_list(user: User) -> list[str]:
@@ -100,14 +101,24 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=TokenPair)
 def login(payload: LoginRequest, db: Session = Depends(get_db)):
+    # Decrypt the password received from React
+    password = decrypt_password(payload.password , payload.iv)
+
     user = get_user_by_username(db, payload.username)
-    if not user or not verify_password(payload.password, user.hashed_password):
+
+    plain_password = decrypt_password(payload.password, payload.iv)
+
+    if not user or not verify_password(plain_password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
         )
+
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is inactive")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is inactive",
+        )
 
     return _issue_token_pair(db, user)
 

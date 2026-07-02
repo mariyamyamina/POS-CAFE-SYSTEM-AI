@@ -1,3 +1,5 @@
+import { encrypt } from "../utils/aes";
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const ACCESS_TOKEN_STORAGE_KEY = 'pos_cafe_access_token';
 const REFRESH_TOKEN_STORAGE_KEY = 'pos_cafe_refresh_token';
@@ -147,7 +149,18 @@ const request = async (path, { method = 'GET', body, headers = {}, auth = true, 
 };
 
 export const authApi = {
-  login: (credentials) => request('/auth/login', { method: 'POST', body: credentials }),
+  login: (credentials) => {
+    const encrypted = encrypt(credentials.password);
+
+    return request("/auth/login", {
+      method: "POST",
+      body: {
+        username: credentials.username,
+        password: encrypted.password,
+        iv: encrypted.iv,
+      },
+    });
+  },
   register: (payload) => request('/auth/register', { method: 'POST', body: payload }),
   getMe: () => request('/auth/me'),
   logout: () => request('/auth/logout', { method: 'POST' }),

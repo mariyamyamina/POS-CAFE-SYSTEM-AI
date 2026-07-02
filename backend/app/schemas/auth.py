@@ -20,6 +20,7 @@ class AdminCreateUserRequest(RegisterRequest):
 class LoginRequest(BaseModel):
     username: str
     password: str
+    iv: str
 
 
 class UserOut(BaseModel):
